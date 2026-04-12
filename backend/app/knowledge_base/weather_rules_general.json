@@ -1,0 +1,20 @@
+[
+  {
+    "id": "weather_irrigation_rain_01",
+    "condition": "अगले 24 घंटे में बारिश संभावना",
+    "advice": "सिंचाई टालें और खेत की नमी की निगरानी करें",
+    "priority": "high"
+  },
+  {
+    "id": "weather_cold_wave_01",
+    "condition": "शीत लहर",
+    "advice": "हल्की सिंचाई शाम को करें और नर्सरी/कोमल पौधों को ढकाव दें",
+    "priority": "medium"
+  },
+  {
+    "id": "weather_heat_wave_01",
+    "condition": "अधिक गर्मी",
+    "advice": "सुबह या शाम सिंचाई करें, दोपहर में नहीं",
+    "priority": "high"
+  }
+]
