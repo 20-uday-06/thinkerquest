@@ -2,17 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection only in specific areas */
+p, span, h1, h2, h3, h4, h5, h6, button, input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 :root {
   color-scheme: light;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
+  padding: 0;
   font-family: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif;
-  background: #f8fafc;
+  background: linear-gradient(135deg, #fef9f3 0%, #fef08a 100%);
+  background-attachment: fixed;
   color: #0f172a;
+  min-height: 100vh;
+}
+
+input,
+textarea {
+  font: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
 }
 
 button {
   font: inherit;
+  border: none;
+  cursor: pointer;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  box-shadow: 0 0 0 1000px white inset !important;
+}
+
+/* Smooth page transitions */
+@supports (animation-timeline: view()) {
+  * {
+    animation-timeline: view();
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #16a34a;
+}
+
