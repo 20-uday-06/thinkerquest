@@ -43,6 +43,13 @@ export async function updateProfile(payload: {
   location: string;
   land_size_acre: number;
   crop_preference: string;
+  role?: string;
+  has_completed_onboarding?: boolean;
+  farm_type?: string;
+  field_of_study?: string;
+  interest_area?: string;
+  skill?: string;
+  worker_location?: string;
 }): Promise<UserProfile> {
   return requestJson<UserProfile>("/api/profile", {
     method: "PUT",
@@ -76,5 +83,21 @@ export async function synthesizeSpeech(text: string): Promise<VoiceTtsResponse> 
   return requestJson<VoiceTtsResponse>("/api/voice/tts", {
     method: "POST",
     body: JSON.stringify({ text, language: "hi" }),
+  });
+}
+
+// INTEGRATION: Onboarding API
+export async function completeOnboarding(payload: {
+  role: string;
+  location: string;
+  crop?: string;
+  land_size?: number;
+  field?: string;
+  interest?: string;
+  skill?: string;
+}): Promise<UserProfile> {
+  return requestJson<UserProfile>("/api/onboarding/complete", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }

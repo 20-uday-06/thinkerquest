@@ -43,8 +43,8 @@ export default function UserSelectionPage() {
   const handleContinue = () => {
     if (selectedRole) {
       setUserRole(selectedRole as any);
-      setHasCompletedOnboarding(true);
-      router.push("/");
+      // INTEGRATION: Redirect to onboarding details instead of home
+      router.push("/onboarding-details");
     }
   };
 

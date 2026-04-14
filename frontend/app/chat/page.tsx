@@ -30,6 +30,9 @@ function ChatContent() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
+  const [pausedMessageId, setPausedMessageId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Add initial AI message
@@ -82,7 +85,7 @@ function ChatContent() {
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, aiMessage]);
-        await speakResponse(response.answer);
+        await speakResponse(response.answer, aiMessage.id);
       } catch (err) {
         if (isCancelled) {
           return;
@@ -145,7 +148,7 @@ function ChatContent() {
       setMessages((prev) => [...prev, aiMessage]);
 
       // Attempt text-to-speech
-      await speakResponse(response.answer);
+      await speakResponse(response.answer, aiMessage.id);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : t("error", language);
       setError(errorMessage);
@@ -174,26 +177,73 @@ function ChatContent() {
     window.speechSynthesis.speak(utterance);
   };
 
-  const speakResponse = async (text: string) => {
+  const speakResponse = async (text: string, messageId: string) => {
     if (!text.trim()) {
       return;
     }
 
+    setPlayingMessageId(messageId);
+    setPausedMessageId(null);
+
     try {
       const tts = await synthesizeSpeech(text);
       const audio = new Audio(`data:${tts.mime_type};base64,${tts.audio_base64}`);
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        setPausedMessageId(null);
+      };
+
       await audio.play();
     } catch {
       // Fallback to browser TTS if API fails
       speakWithBrowser(text);
+      setPlayingMessageId(null);
+      setPausedMessageId(null);
     }
   };
 
-  const handleSpeak = (text: string) => {
-    if (!("speechSynthesis" in window)) return;
+  const stopSpeaking = () => {
+    if (audioRef.current && playingMessageId) {
+      audioRef.current.pause();
+      setPausedMessageId(playingMessageId);
+      setPlayingMessageId(null);
+    }
+    window.speechSynthesis?.pause?.();
+  };
 
-    setIsSpeaking(true);
-    void speakResponse(text).finally(() => setIsSpeaking(false));
+  const resumeSpeaking = () => {
+    if (audioRef.current && pausedMessageId) {
+      setPlayingMessageId(pausedMessageId);
+      setPausedMessageId(null);
+      audioRef.current.play();
+    } else {
+      window.speechSynthesis?.resume?.();
+    }
+  };
+
+  const handleSpeak = (text: string, messageId: string) => {
+    if (pausedMessageId === messageId) {
+      // Message is paused - resume it
+      resumeSpeaking();
+    } else if (playingMessageId === messageId) {
+      // Currently playing this message - pause it
+      stopSpeaking();
+    } else if (playingMessageId) {
+      // A different message is playing - stop it first
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      }
+      window.speechSynthesis?.cancel();
+      setPausedMessageId(null);
+      // Start playing this message
+      void speakResponse(text, messageId);
+    } else {
+      // Nothing playing - start this message
+      void speakResponse(text, messageId);
+    }
   };
 
   const handleVoiceInput = () => {
@@ -292,18 +342,11 @@ function ChatContent() {
               message={message.text}
               isUser={message.isUser}
               showSpeakButton={!message.isUser && !message.text.includes("नमस्ते") && !message.text.includes("Hello")}
-              onSpeak={() => !message.isUser && handleSpeak(message.text)}
+              onSpeak={() => !message.isUser && handleSpeak(message.text, message.id)}
+              onStop={stopSpeaking}
+              isPlaying={playingMessageId === message.id}
+              language={language}
             />
-            {!message.isUser && !message.text.includes("नमस्ते") && !message.text.includes("Hello") && !message.text.includes("✗") && (
-              <button
-                onClick={() => handleSpeak(message.text)}
-                disabled={isSpeaking}
-                className="ml-2 mt-1 text-xs text-rural-greenDark hover:opacity-70 disabled:opacity-50 flex items-center gap-1"
-              >
-                <span>🔊</span>
-                <span>{isSpeaking ? t("listening", language) : t("listen", language)}</span>
-              </button>
-            )}
           </div>
         ))}
 
@@ -329,8 +372,8 @@ function ChatContent() {
       </div>
 
       {/* Input area */}
-      <div className="sticky bottom-0 bg-rural-white border-t border-rural-greenLight p-4 shadow-soft-lg">
-        <div className="flex gap-2 items-end mb-3">
+      <div className="sticky bottom-0 bg-rural-white border-t border-rural-greenLight p-4 shadow-soft-lg flex justify-center">
+        <div className="flex gap-2 items-end mb-3 w-full max-w-md">
           <button
             onClick={handleVoiceInput}
             className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all shadow-soft active:scale-95 ${
@@ -369,7 +412,7 @@ function ChatContent() {
       </div>
 
       {/* Quick suggestion */}
-      {messages.length <= 1 && (
+      {/* {messages.length <= 1 && (
         <div className="px-4 pb-4">
           <Card className="text-center bg-rural-greenLight">
             <p className="text-xs text-slate-600 mb-2">{t("other-questions", language)}</p>
@@ -389,7 +432,7 @@ function ChatContent() {
             </div>
           </Card>
         </div>
-      )}
+      )} */}
     </main>
   );
 }

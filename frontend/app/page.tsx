@@ -234,7 +234,7 @@ export default function HomePage() {
       </div>
 
       {/* Suggestion prompt */}
-      <div className="mt-8 mb-4">
+      {/* <div className="mt-8 mb-4">
         <p className="text-xs text-slate-500 px-2 mb-3">{t("now-learn", language)}</p>
         <div className="grid grid-cols-1 gap-2">
           {SUGGESTION_KEYS.map((key) => (
@@ -248,7 +248,7 @@ export default function HomePage() {
             </button>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Offline mode button */}
       {!isOnline && (

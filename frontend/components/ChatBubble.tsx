@@ -1,21 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Button from "./Button";
 
 interface ChatBubbleProps {
   message: string;
   isUser: boolean;
   onSpeak?: () => void;
+  onStop?: () => void;
   showSpeakButton?: boolean;
+  isPlaying?: boolean;
+  language?: "en" | "hi";
 }
 
 export default function ChatBubble({
   message,
   isUser,
   onSpeak,
+  onStop,
   showSpeakButton = false,
+  isPlaying = false,
+  language = "en",
 }: ChatBubbleProps) {
+  const playText = language === "hi" ? "सुनें" : "Play";
+  const pauseText = language === "hi" ? "रोकें" : "Pause";
+
   return (
     <div
       className={`flex gap-2 animate-fade-in ${
@@ -31,14 +40,14 @@ export default function ChatBubble({
       >
         <p className="text-sm leading-6">{message}</p>
 
-        {!isUser && showSpeakButton && onSpeak && (
+        {!isUser && showSpeakButton && (onSpeak || onStop) && (
           <button
-            onClick={onSpeak}
+            onClick={isPlaying ? onStop : onSpeak}
             className="mt-2 flex items-center gap-1 text-xs font-medium text-rural-greenDark hover:opacity-80"
-            aria-label="संदेश सुनें"
+            aria-label={isPlaying ? pauseText : playText}
           >
-            <span>🔊</span>
-            <span>सुनें</span>
+            <span>{isPlaying ? "⏸" : "▶"}</span>
+            <span>{isPlaying ? pauseText : playText}</span>
           </button>
         )}
       </div>

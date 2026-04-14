@@ -1,9 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type UserRole = "किसान" | "छात्र" | "मजदूर" | null;
 export type Language = "hi" | "en";
+
+export interface UserProfileData {
+  role: UserRole;
+  location: string;
+  crop?: string;
+  landSize?: number;
+  field?: string;
+  interest?: string;
+  skill?: string;
+}
 
 interface AppContextType {
   userRole: UserRole;
@@ -12,6 +22,8 @@ interface AppContextType {
   setIsOnline: (online: boolean) => void;
   hasCompletedOnboarding: boolean;
   setHasCompletedOnboarding: (completed: boolean) => void;
+  profileData: UserProfileData | null;
+  setProfileData: (data: UserProfileData | null) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
 }
@@ -22,7 +34,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [isOnline, setIsOnline] = useState(true);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [language, setLanguage] = useState<Language>("hi");
+  const [mounted, setMounted] = useState(false);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    setMounted(true);
+    const stored = localStorage.getItem("appState");
+    if (stored) {
+      try {
+        const state = JSON.parse(stored);
+        if (state.userRole) setUserRole(state.userRole);
+        if (state.hasCompletedOnboarding !== undefined)
+          setHasCompletedOnboarding(state.hasCompletedOnboarding);
+        if (state.profileData) setProfileData(state.profileData);
+        if (state.language) setLanguage(state.language);
+      } catch (error) {
+        console.error("Failed to load app state from localStorage:", error);
+      }
+    }
+  }, []);
+
+  // Persist to localStorage whenever state changes
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem(
+        "appState",
+        JSON.stringify({
+          userRole,
+          hasCompletedOnboarding,
+          profileData,
+          language,
+        })
+      );
+    }
+  }, [userRole, hasCompletedOnboarding, profileData, language, mounted]);
 
   return (
     <AppContext.Provider
@@ -33,6 +80,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setIsOnline,
         hasCompletedOnboarding,
         setHasCompletedOnboarding,
+        profileData,
+        setProfileData,
         language,
         setLanguage,
       }}

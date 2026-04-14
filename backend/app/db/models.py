@@ -10,9 +10,33 @@ class UserProfile(Base):
     __tablename__ = "user_profiles"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+
+    # User identification
+    name: Mapped[str] = mapped_column(String(120), nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=True)
+
+    # User role (किसान, छात्र, मजदूर)
+    role: Mapped[str] = mapped_column(String(40), nullable=True)
+
+    # Onboarding status
+    has_completed_onboarding: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    # Base profile fields (farmer, student, worker)
     location: Mapped[str] = mapped_column(String(120), nullable=False)
     land_size_acre: Mapped[float] = mapped_column(Float, nullable=False)
     crop_preference: Mapped[str] = mapped_column(String(80), nullable=False)
+
+    # Farmer-specific fields
+    farm_type: Mapped[str] = mapped_column(String(80), nullable=True)
+
+    # Student-specific fields
+    field_of_study: Mapped[str] = mapped_column(String(120), nullable=True)
+    interest_area: Mapped[str] = mapped_column(String(120), nullable=True)
+
+    # Worker-specific fields
+    skill: Mapped[str] = mapped_column(String(120), nullable=True)
+    worker_location: Mapped[str] = mapped_column(String(120), nullable=True)
+
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),
