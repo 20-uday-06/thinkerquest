@@ -4,49 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-
-const OFFLINE_FAQS = {
-  खेती: [
-    {
-      id: "1",
-      question: "गेहूं की बुवाई कब करें?",
-      answer:
-        "गेहूं की बुवाई अक्टूबर-नवंबर में करते हैं। सही समय पर बुवाई से अच्छी फसल मिलती है।",
-    },
-    {
-      id: "2",
-      question: "सिंचाई कितनी बार करनी चाहिए?",
-      answer:
-        "गेहूं को 5-6 बार सिंचाई की जरूरत होती है। गर्मी में ज्यादा ध्यान रखें।",
-    },
-    {
-      id: "3",
-      question: "खाद कितनी डालनी चाहिए?",
-      answer:
-        "गेहूं के लिए 120 किग्रा यूरिया प्रति हेक्टेयर दें। पानी देने से पहले खाद डालें।",
-    },
-  ],
-  स्वास्थ्य: [
-    {
-      id: "4",
-      question: "बुखार आने पर क्या करें?",
-      answer:
-        "ठंडे पानी से शरीर पोंछें, तरल पदार्थ पिएं। अगर 3 दिन से ज्यादा है तो डॉक्टर से मिलें।",
-    },
-    {
-      id: "5",
-      question: "पेट दर्द का घरेलू इलाज?",
-      answer:
-        "छाछ या नमक-चीनी का घोल पिएं। तेल वाली चीजें न खाएं।",
-    },
-    {
-      id: "6",
-      question: "सिर दर्द से बचने के लिए क्या करें?",
-      answer:
-        "पर्याप्त पानी पिएं, पर्यावरण से दूर रहें। नियमित नींद लें।",
-    },
-  ],
-};
+import { useAppContext } from "@/lib/AppContext";
+import { t } from "@/lib/translations";
 
 interface ExpandedFAQ {
   category: string;
@@ -54,14 +13,44 @@ interface ExpandedFAQ {
 }
 
 export default function OfflineModePage() {
+  const { language } = useAppContext();
   const [expandedFAQ, setExpandedFAQ] = useState<ExpandedFAQ | null>(null);
 
-  const toggleExpand = (category: string, itemId: string) => {
-    if (expandedFAQ?.category === category && expandedFAQ?.itemId === itemId) {
-      setExpandedFAQ(null);
-    } else {
-      setExpandedFAQ({ category, itemId });
-    }
+  const OFFLINE_FAQS = {
+    farm: [
+      {
+        id: "1",
+        questionKey: "farm-faq-1-q",
+        answerKey: "farm-faq-1-a",
+      },
+      {
+        id: "2",
+        questionKey: "farm-faq-2-q",
+        answerKey: "farm-faq-2-a",
+      },
+      {
+        id: "3",
+        questionKey: "farm-faq-3-q",
+        answerKey: "farm-faq-3-a",
+      },
+    ],
+    health: [
+      {
+        id: "4",
+        questionKey: "health-faq-1-q",
+        answerKey: "health-faq-1-a",
+      },
+      {
+        id: "5",
+        questionKey: "health-faq-2-q",
+        answerKey: "health-faq-2-a",
+      },
+      {
+        id: "6",
+        questionKey: "health-faq-3-q",
+        answerKey: "health-faq-3-a",
+      },
+    ],
   };
 
   return (
@@ -76,8 +65,8 @@ export default function OfflineModePage() {
             ←
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">ऑफ़लाइन मोड</h1>
-            <p className="text-sm text-slate-600">📵 इंटरनेट के बिना भी उपयोगी जानकारी पाएं</p>
+            <h1 className="text-2xl font-bold text-slate-900">{t("offline-mode", language)}</h1>
+            <p className="text-sm text-slate-600">{t("offline-help", language)}</p>
           </div>
         </div>
 
@@ -87,10 +76,10 @@ export default function OfflineModePage() {
             <span className="text-xl">⚠️</span>
             <div>
               <p className="font-semibold text-sm text-yellow-900">
-                आप ऑफ़लाइन हैं
+                {t("offline-warning", language)}
               </p>
               <p className="text-xs text-yellow-800 mt-1">
-                यह केवल सामान्य जानकारी है। विस्तृत सलाह के लिए इंटरनेट कनेक्ट करें।
+                {t("offline-desc", language)}
               </p>
             </div>
           </div>
@@ -99,89 +88,151 @@ export default function OfflineModePage() {
 
       {/* FAQ Categories */}
       <div className="space-y-4">
-        {Object.entries(OFFLINE_FAQS).map(([category, faqs]) => (
-          <Card key={category} className="overflow-hidden">
-            <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-              <span>
-                {category === "खेती"
-                  ? "🌾"
-                  : category === "स्वास्थ्य"
-                    ? "🏥"
-                    : "❓"}
-              </span>
-              {category} के सवाल
-            </h2>
+        {/* Farm FAQs */}
+        <Card key="farm" className="overflow-hidden">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <span>🌾</span>
+            {t("farm-faqs", language)}
+          </h2>
 
-            <div className="space-y-2">
-              {faqs.map((faq) => {
-                const isExpanded =
-                  expandedFAQ?.category === category &&
-                  expandedFAQ?.itemId === faq.id;
+          <div className="space-y-2">
+            {OFFLINE_FAQS.farm.map((faq) => {
+              const isExpanded =
+                expandedFAQ?.category === "farm" &&
+                expandedFAQ?.itemId === faq.id;
 
-                return (
-                  <button
-                    key={faq.id}
-                    onClick={() => toggleExpand(category, faq.id)}
-                    className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
-                      isExpanded
-                        ? "bg-rural-greenLight border-2 border-rural-green"
-                        : "bg-rural-cream hover:bg-rural-greenLight border-2 border-transparent"
-                    }`}
-                  >
-                    <div className="flex gap-3 items-start">
-                      <span className="text-lg mt-1">
-                        {isExpanded ? "▼" : "▶"}
-                      </span>
-                      <div className="flex-1">
-                        <p
-                          className={`font-medium text-sm ${
-                            isExpanded
-                              ? "text-rural-greenDark"
-                              : "text-slate-900"
-                          }`}
-                        >
-                          {faq.question}
-                        </p>
+              return (
+                <button
+                  key={faq.id}
+                  onClick={() => setExpandedFAQ(isExpanded ? null : { category: "farm", itemId: faq.id })}
+                  className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
+                    isExpanded
+                      ? "bg-rural-greenLight border-2 border-rural-green"
+                      : "bg-rural-cream hover:bg-rural-greenLight border-2 border-transparent"
+                  }`}
+                >
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-1">
+                      {isExpanded ? "▼" : "▶"}
+                    </span>
+                    <div className="flex-1">
+                      <p
+                        className={`font-medium text-sm ${
+                          isExpanded
+                            ? "text-rural-greenDark"
+                            : "text-slate-900"
+                        }`}
+                      >
+                        {t(faq.questionKey, language)}
+                      </p>
 
-                        {isExpanded && (
-                          <div className="mt-3 pt-3 border-t border-rural-greenDark border-opacity-30">
-                            <p className="text-sm text-slate-700 leading-6">
-                              {faq.answer}
-                            </p>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if ("speechSynthesis" in window) {
-                                  const utterance =
-                                    new SpeechSynthesisUtterance(faq.answer);
-                                  utterance.lang = "hi-IN";
-                                  utterance.rate = 0.9;
-                                  window.speechSynthesis.cancel();
-                                  window.speechSynthesis.speak(utterance);
-                                }
-                              }}
-                              className="mt-2 text-xs text-rural-greenDark hover:opacity-70 flex items-center gap-1"
-                            >
-                              <span>🔊</span>
-                              <span>सुनें</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-rural-greenDark border-opacity-30">
+                          <p className="text-sm text-slate-700 leading-6">
+                            {t(faq.answerKey, language)}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if ("speechSynthesis" in window) {
+                                const utterance =
+                                  new SpeechSynthesisUtterance(t(faq.answerKey, language));
+                                utterance.lang = language === "hi" ? "hi-IN" : "en-US";
+                                utterance.rate = 0.9;
+                                window.speechSynthesis.cancel();
+                                window.speechSynthesis.speak(utterance);
+                              }
+                            }}
+                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 flex items-center gap-1"
+                          >
+                            <span>🔊</span>
+                            <span>{t("listen", language)}</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
-        ))}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+
+        {/* Health FAQs */}
+        <Card key="health" className="overflow-hidden">
+          <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+            <span>🏥</span>
+            {t("health-faqs", language)}
+          </h2>
+
+          <div className="space-y-2">
+            {OFFLINE_FAQS.health.map((faq) => {
+              const isExpanded =
+                expandedFAQ?.category === "health" &&
+                expandedFAQ?.itemId === faq.id;
+
+              return (
+                <button
+                  key={faq.id}
+                  onClick={() => setExpandedFAQ(isExpanded ? null : { category: "health", itemId: faq.id })}
+                  className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
+                    isExpanded
+                      ? "bg-rural-greenLight border-2 border-rural-green"
+                      : "bg-rural-cream hover:bg-rural-greenLight border-2 border-transparent"
+                  }`}
+                >
+                  <div className="flex gap-3 items-start">
+                    <span className="text-lg mt-1">
+                      {isExpanded ? "▼" : "▶"}
+                    </span>
+                    <div className="flex-1">
+                      <p
+                        className={`font-medium text-sm ${
+                          isExpanded
+                            ? "text-rural-greenDark"
+                            : "text-slate-900"
+                        }`}
+                      >
+                        {t(faq.questionKey, language)}
+                      </p>
+
+                      {isExpanded && (
+                        <div className="mt-3 pt-3 border-t border-rural-greenDark border-opacity-30">
+                          <p className="text-sm text-slate-700 leading-6">
+                            {t(faq.answerKey, language)}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if ("speechSynthesis" in window) {
+                                const utterance =
+                                  new SpeechSynthesisUtterance(t(faq.answerKey, language));
+                                utterance.lang = language === "hi" ? "hi-IN" : "en-US";
+                                utterance.rate = 0.9;
+                                window.speechSynthesis.cancel();
+                                window.speechSynthesis.speak(utterance);
+                              }
+                            }}
+                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 flex items-center gap-1"
+                          >
+                            <span>🔊</span>
+                            <span>{t("listen", language)}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
       </div>
 
       {/* Help text */}
       <Card className="mt-8 bg-blue-50 border-l-4 border-l-blue-400">
         <p className="text-sm text-blue-900 leading-6">
-          💡 <strong>सुझाव:</strong> जब आप वापस ऑनलाइन हों तो अपने सभी सवाल
-          दोबारा पूछ सकते हैं और विस्तृत जानकारी पा सकते हैं।
+          {t("offline-tip", language)}
         </p>
       </Card>
 
@@ -189,7 +240,7 @@ export default function OfflineModePage() {
       <div className="mt-8">
         <Link href="/">
           <Button size="lg" className="w-full">
-            🏠 होम पेज पर जाएं
+            🏠 {t("homepage", language)}
           </Button>
         </Link>
       </div>

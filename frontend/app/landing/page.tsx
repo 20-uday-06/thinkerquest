@@ -48,7 +48,7 @@ export default function LandingPage() {
         </p>
 
         {/* Description */}
-        <p className="text-sm text-slate-600 mb-12 leading-7">
+        <p className="text-sm text-slate-600 mb-12 leading-7 font-semibold">
           {t("landing-description", language)}
         </p>
 
@@ -58,23 +58,23 @@ export default function LandingPage() {
           onClick={handleStart}
           className="mb-8 shadow-soft-lg hover:shadow-lg"
         >
-          <span>{t("start-button", language)}</span>
+          <span className="font-semibold">{t("start-button", language)}</span>
           <span>→</span>
         </Button>
 
         {/* Features preview */}
         <div className="mt-12 grid grid-cols-3 gap-4 w-full">
           <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">🎤</div>
-            <p className="text-xs text-slate-700 font-medium">{t("voice", language)}</p>
+            <div className="text-3xl mb-2">🎤</div>
+            <p className="text-s text-slate-700 font-medium">{t("voice", language)}</p>
           </div>
           <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">⚡</div>
-            <p className="text-xs text-slate-700 font-medium">{t("fast", language)}</p>
+            <div className="text-3xl mb-2">💬</div>
+            <p className="text-s text-slate-700 font-medium">{t("chat", language)}</p>
           </div>
           <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-2xl mb-1">📵</div>
-            <p className="text-xs text-slate-700 font-medium">{t("offline", language)}</p>
+            <div className="text-3xl mb-2">📵</div>
+            <p className="text-s text-slate-700 font-medium">{t("offline", language)}</p>
           </div>
         </div>
       </div>

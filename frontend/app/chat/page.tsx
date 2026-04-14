@@ -28,6 +28,7 @@ function ChatContent() {
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -129,6 +130,68 @@ function ChatContent() {
     void speakResponse(text).finally(() => setIsSpeaking(false));
   };
 
+  const handleVoiceInput = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    // Better browser support checking
+    const SpeechRecognitionAPI =
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition ||
+      (window as any).mozSpeechRecognition ||
+      (window as any).msSpeechRecognition;
+
+    if (!SpeechRecognitionAPI) {
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognitionAPI() as {
+        lang: string;
+        interimResults: boolean;
+        maxAlternatives: number;
+        start: () => void;
+        stop: () => void;
+        onresult: (event: any) => void;
+        onerror: (event: any) => void;
+        onend: () => void;
+      };
+      recognition.lang = "hi-IN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      if (isListening) {
+        recognition.stop();
+        setIsListening(false);
+        return;
+      }
+
+      setIsListening(true);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript?.trim() ?? "";
+        setIsListening(false);
+
+        if (transcript) {
+          setInputText(transcript);
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      setIsListening(false);
+    }
+  };
+
   return (
     <main className="min-h-screen w-full flex flex-col bg-gradient-to-b from-rural-cream via-rural-greenLight to-rural-cream">
       {/* Header */}
@@ -203,8 +266,14 @@ function ChatContent() {
       <div className="sticky bottom-0 bg-rural-white border-t border-rural-greenLight p-4 shadow-soft-lg">
         <div className="flex gap-2 items-end mb-3">
           <button
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-rural-green text-white flex items-center justify-center text-xl hover:bg-rural-greenDark transition-colors shadow-soft active:scale-95"
+            onClick={handleVoiceInput}
+            className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all shadow-soft active:scale-95 ${
+              isListening
+                ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
+                : "bg-rural-green hover:bg-rural-greenDark text-white"
+            }`}
             aria-label="माइक्रोफोन"
+            title={isListening ? "Listening..." : "Click to speak"}
           >
             🎤
           </button>

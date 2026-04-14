@@ -76,14 +76,14 @@ export default function UserSelectionPage() {
           size="lg"
           onClick={handleContinue}
           disabled={!selectedRole}
-          className="w-full"
+          className="w-full font-semibold"
         >
           {t("continue", language)}
         </Button>
         <button
           type="button"
           onClick={() => router.push("/landing")}
-          className="w-full mt-3 text-sm text-slate-600 hover:text-slate-900 transition-colors"
+          className="w-full mt-3 text-sm text-slate-600 hover:text-slate-900 font-semibold transition-colors"
         >
           {t("go-back", language)}
         </button>

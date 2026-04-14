@@ -5,13 +5,13 @@ export const translations: Record<Language, Record<string, string>> = {
     // Landing
     "app-name": "Grameen AI",
     "app-subtitle": "Sahayak",
-    "greeting": "नमस्ते 🙏",
+    "greeting": "नमस्ते जी",
     "landing-subtitle": "आपकी मदद के लिए तैयार",
     "landing-description": "खेती, स्वास्थ्य, और सरकारी योजनाओं की जानकारी के लिए बस बोलें",
     "start-button": "शुरू करें",
-    "voice": "आवाज़",
-    "fast": "तेज़",
-    "offline": "ऑफ़लाइन",
+    "voice": "बोलिए",
+    "chat": "बात करिए",
+    "offline": "ऑफलाइन में भी",
 
     // User Selection
     "welcome": "स्वागत है!",
@@ -93,9 +93,24 @@ export const translations: Record<Language, Record<string, string>> = {
     "offline-help": "📵 इंटरनेट के बिना भी उपयोगी जानकारी पाएं",
     "offline-warning": "आप ऑफ़लाइन हैं",
     "offline-desc": "यह केवल सामान्य जानकारी है। विस्तृत सलाह के लिए इंटरनेट कनेक्ट करें।",
-    "farm-faqs": "🌾 खेती के सवाल",
-    "health-faqs": "🏥 स्वास्थ्य के सवाल",
+    "farm-faqs": "खेती के सवाल",
+    "health-faqs": "स्वास्थ्य के सवाल",
     "offline-tip": "💡 सुझाव: जब आप वापस ऑनलाइन हों तो अपने सभी सवाल दोबारा पूछ सकते हैं।",
+    // Farm FAQs
+    "farm-faq-1-q": "गेहूं की बुवाई कब करें?",
+    "farm-faq-1-a": "गेहूं की बुवाई अक्टूबर-नवंबर में करते हैं। सही समय पर बुवाई से अच्छी फसल मिलती है।",
+    "farm-faq-2-q": "सिंचाई कितनी बार करनी चाहिए?",
+    "farm-faq-2-a": "गेहूं को 5-6 बार सिंचाई की जरूरत होती है। गर्मी में ज्यादा ध्यान रखें।",
+    "farm-faq-3-q": "खाद कितनी डालनी चाहिए?",
+    "farm-faq-3-a": "गेहूं के लिए 120 किग्रा यूरिया प्रति हेक्टेयर दें। पानी देने से पहले खाद डालें।",
+    // Health FAQs
+    "health-faq-1-q": "बुखार आने पर क्या करें?",
+    "health-faq-1-a": "ठंडे पानी से शरीर पोंछें, तरल पदार्थ पिएं। अगर 3 दिन से ज्यादा है तो डॉक्टर से मिलें।",
+    "health-faq-2-q": "पेट दर्द का घरेलू इलाज?",
+    "health-faq-2-a": "छाछ या नमक-चीनी का घोल पिएं। तेल वाली चीजें न खाएं।",
+    "health-faq-3-q": "सिर दर्द से बचने के लिए क्या करें?",
+    "health-faq-3-a": "पर्याप्त पानी पिएं, शांत वातावरण में रहें। नियमित नींद लें।",
+    "listen": "सुनें",
 
     // Response
     "your-answer": "आपकी",
@@ -116,12 +131,12 @@ export const translations: Record<Language, Record<string, string>> = {
     // Landing
     "app-name": "Grameen AI",
     "app-subtitle": "Sahayak",
-    "greeting": "Hello 🙏",
+    "greeting": "Hello Ji",
     "landing-subtitle": "Ready to help you",
     "landing-description": "Just speak for information on farming, health, and government schemes",
     "start-button": "Get Started",
     "voice": "Voice",
-    "fast": "Fast",
+    "chat": "Chat",
     "offline": "Offline",
 
     // User Selection
@@ -204,9 +219,24 @@ export const translations: Record<Language, Record<string, string>> = {
     "offline-help": "📵 Get useful information even without internet",
     "offline-warning": "You are offline",
     "offline-desc": "This is general information. Connect to internet for detailed advice.",
-    "farm-faqs": "🌾 Farm FAQs",
-    "health-faqs": "🏥 Health FAQs",
+    "farm-faqs": "Farm FAQs",
+    "health-faqs": "Health FAQs",
     "offline-tip": "💡 Tip: When back online, you can re-ask all your questions.",
+    // Farm FAQs
+    "farm-faq-1-q": "When to sow wheat?",
+    "farm-faq-1-a": "Wheat is sown in October-November. Sowing at the right time gives good harvest.",
+    "farm-faq-2-q": "How many times should I irrigate?",
+    "farm-faq-2-a": "Wheat needs 5-6 irrigations. Pay extra attention during summer.",
+    "farm-faq-3-q": "How much fertilizer should I use?",
+    "farm-faq-3-a": "Use 120 kg urea per hectare for wheat. Apply fertilizer before watering.",
+    // Health FAQs
+    "health-faq-1-q": "What to do if fever occurs?",
+    "health-faq-1-a": "Wipe body with cool water, drink fluids. See a doctor if fever lasts more than 3 days.",
+    "health-faq-2-q": "Home remedy for stomach pain?",
+    "health-faq-2-a": "Drink buttermilk or salt-sugar solution. Avoid oily foods.",
+    "health-faq-3-q": "How to prevent headaches?",
+    "health-faq-3-a": "Drink plenty of water, stay in calm environment. Get regular sleep.",
+    "listen": "Listen",
 
     // Response
     "your-answer": "Your",

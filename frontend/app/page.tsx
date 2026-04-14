@@ -70,56 +70,64 @@ export default function HomePage() {
       return;
     }
 
+    // Better browser support checking
     const SpeechRecognitionAPI =
-      (window as { webkitSpeechRecognition?: any }).webkitSpeechRecognition ??
-      (window as { SpeechRecognition?: any }).SpeechRecognition;
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition ||
+      (window as any).mozSpeechRecognition ||
+      (window as any).msSpeechRecognition;
 
     if (!SpeechRecognitionAPI) {
       setStatus(t("browser-unsupported", language));
       return;
     }
 
-    const recognition = new SpeechRecognitionAPI() as {
-      lang: string;
-      interimResults: boolean;
-      maxAlternatives: number;
-      start: () => void;
-      onresult: (event: any) => void;
-      onerror: (event: any) => void;
-      onend: () => void;
-    };
-    recognition.lang = "hi-IN";
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
+    try {
+      const recognition = new SpeechRecognitionAPI() as {
+        lang: string;
+        interimResults: boolean;
+        maxAlternatives: number;
+        start: () => void;
+        onresult: (event: any) => void;
+        onerror: (event: any) => void;
+        onend: () => void;
+      };
+      recognition.lang = "hi-IN";
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
 
-    setIsListening(true);
-    setStatus(t("listening-status", language));
+      setIsListening(true);
+      setStatus(t("listening-status", language));
 
-    recognition.onresult = (event: any) => {
-      const transcript = event.results?.[0]?.[0]?.transcript?.trim() ?? "";
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript?.trim() ?? "";
+        setIsListening(false);
+
+        if (transcript) {
+          router.push(`/chat?topic=${encodeURIComponent(transcript)}`);
+        } else {
+          setStatus(t("no-voice-detected", language));
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        setIsListening(false);
+        const errorMessage =
+          event.error === "network"
+            ? t("network-error", language)
+            : t("voice-failed", language);
+        setStatus(errorMessage);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
       setIsListening(false);
-
-      if (transcript) {
-        router.push(`/chat?topic=${encodeURIComponent(transcript)}`);
-      } else {
-        setStatus(t("no-voice-detected", language));
-      }
-    };
-
-    recognition.onerror = (event: any) => {
-      setIsListening(false);
-      const errorMessage =
-        event.error === "network"
-          ? t("network-error", language)
-          : t("voice-failed", language);
-      setStatus(errorMessage);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.start();
+      setStatus(t("browser-unsupported", language));
+    }
   };
 
   const handleActionCard = (action: string) => {

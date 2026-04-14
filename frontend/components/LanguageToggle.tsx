@@ -12,12 +12,14 @@ export default function LanguageToggle() {
   return (
     <button
       onClick={toggleLanguage}
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-rural-green text-white px-4 py-3 shadow-soft-lg hover:bg-rural-greenDark transition-all duration-200 active:scale-95 font-medium text-sm"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-rural-greenDark to-emerald-800 flex items-center justify-center text-white transition-all duration-300 active:scale-90 active:shadow-md hover:shadow-2xl hover:-translate-y-1 font-bold text-lg tracking-wider"
+      style={{
+        boxShadow: "0 8px 24px rgba(34, 197, 94, 0.3), 0 4px 12px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+      }}
       aria-label="Toggle language"
       title={language === "hi" ? "Switch to English" : "हिंदी में बदलें"}
     >
-      <span className="text-lg">🌐</span>
-      <span>{language === "hi" ? "हिंदी" : "English"}</span>
+      <span>{language === "hi" ? "H" : "E"}</span>
     </button>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
@@ -11,6 +12,7 @@ import { getProfile, updateProfile } from "@/lib/api";
 import type { UserProfile } from "@/lib/types";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const { userRole, setUserRole, setHasCompletedOnboarding, language } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,20 +98,21 @@ export default function ProfilePage() {
   const handleLogout = () => {
     setUserRole(null);
     setHasCompletedOnboarding(false);
+    router.push("/landing");
   };
 
   return (
     <main className="min-h-screen w-full flex flex-col p-4 pb-safe bg-gradient-to-b from-rural-cream via-rural-greenLight to-rural-cream safe-area">
       {/* Header */}
-      <header className="mb-6">
-        <div className="flex items-center gap-3 mb-4">
+      <header className="mb-8">
+        <div className="flex items-center gap-3">
           <Link
             href="/"
             className="text-2xl hover:opacity-70 transition-opacity"
           >
             ←
           </Link>
-          <h1 className="text-2xl font-bold text-slate-900">आपकी प्रोफ़ाइल</h1>
+          <h1 className="text-3xl font-bold text-slate-900">आपकी प्रोफ़ाइल</h1>
         </div>
       </header>
 
@@ -126,135 +129,143 @@ export default function ProfilePage() {
         </Card>
       )}
 
-      {/* Avatar and name */}
-      <Card className="mb-6 text-center">
-        <div className="text-6xl mb-4">👤</div>
-        <h2 className="text-2xl font-bold text-slate-900 mb-2">नमस्ते</h2>
-        {userRole && (
-          <div className="inline-block px-4 py-2 rounded-full bg-rural-greenLight text-rural-greenDark font-medium text-sm">
-            {userRole}
-          </div>
-        )}
-      </Card>
+      {/* Main content - Two column layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
+        {/* LEFT COLUMN - Profile Info */}
+        <div className="lg:col-span-1 flex flex-col gap-6">
+          {/* Avatar Card */}
+          <Card className="text-center bg-gradient-to-br from-rural-greenLight to-rural-cream">
+            <div className="text-7xl mb-4">👤</div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-3">नमस्ते</h2>
+            {userRole && (
+              <div className="inline-block px-4 py-2 rounded-full bg-rural-green text-white font-medium text-sm">
+                {userRole}
+              </div>
+            )}
+          </Card>
 
-      {/* Profile information */}
-      {isLoading ? (
-        <Card className="mb-6 text-center">
-          <p className="text-sm text-slate-600">लोड हो रहा है...</p>
-        </Card>
-      ) : (
-        <Card className="mb-6">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
-            व्यक्तिगत जानकारी
-          </h3>
+          {/* Profile Details */}
+          {isLoading ? (
+            <Card className="text-center">
+              <p className="text-sm text-slate-600">लोड हो रहा है...</p>
+            </Card>
+          ) : (
+            <Card>
+              <h3 className="text-sm font-semibold text-slate-600 mb-4 uppercase tracking-wide">
+                विवरण
+              </h3>
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm text-slate-600 font-medium">स्थान:</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => handleEdit("location", e.target.value)}
-                placeholder="जैसे: उत्तर प्रदेश"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green transition-colors"
-                disabled={isSaving}
-              />
-            </div>
+              <div className="space-y-4">
+                <div className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                  <p className="text-xs text-slate-500 font-medium mb-1">स्थान</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {formData.location || "—"}
+                  </p>
+                </div>
 
-            <div>
-              <label className="text-sm text-slate-600 font-medium">
-                भूमि का आकार (एकड़):
-              </label>
-              <input
-                type="number"
-                value={formData.land_size_acre}
-                onChange={(e) => handleEdit("land_size_acre", e.target.value)}
-                placeholder="जैसे: 5"
-                inputMode="decimal"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green transition-colors"
-                disabled={isSaving}
-              />
-            </div>
+                <div className="pb-4 border-b border-slate-100 last:border-0 last:pb-0">
+                  <p className="text-xs text-slate-500 font-medium mb-1">भूमि</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {formData.land_size_acre || "—"} एकड़
+                  </p>
+                </div>
 
-            <div>
-              <label className="text-sm text-slate-600 font-medium">
-                पसंदीदा फसल:
-              </label>
-              <input
-                type="text"
-                value={formData.crop_preference}
-                onChange={(e) => handleEdit("crop_preference", e.target.value)}
-                placeholder="जैसे: गेहूं"
-                className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green transition-colors"
-                disabled={isSaving}
-              />
-            </div>
+                <div>
+                  <p className="text-xs text-slate-500 font-medium mb-1">फसल</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {formData.crop_preference || "—"}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
 
+        {/* RIGHT COLUMN - Settings & Actions */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          {/* Edit Profile Form */}
+          {!isLoading && (
+            <Card>
+              <h3 className="text-sm font-semibold text-slate-600 mb-6 uppercase tracking-wide">
+                प्रोफ़ाइल संपादित करें
+              </h3>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                    स्थान
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.location}
+                    onChange={(e) => handleEdit("location", e.target.value)}
+                    placeholder="जैसे: उत्तर प्रदेश"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all"
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                    भूमि का आकार (एकड़)
+                  </label>
+                  <input
+                    type="number"
+                    value={formData.land_size_acre}
+                    onChange={(e) => handleEdit("land_size_acre", e.target.value)}
+                    placeholder="जैसे: 5"
+                    inputMode="decimal"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all"
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                    पसंदीदा फसल
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.crop_preference}
+                    onChange={(e) => handleEdit("crop_preference", e.target.value)}
+                    placeholder="जैसे: गेहूं"
+                    className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all"
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <Button
+                  size="md"
+                  onClick={handleSave}
+                  disabled={isSaving || isLoading}
+                  isLoading={isSaving}
+                  className="w-full"
+                >
+                  💾 सेव करें
+                </Button>
+              </div>
+            </Card>
+          )}
+
+          {/* Logout Button - Centered */}
+          <div className="flex justify-center pt-8">
             <Button
+              variant="secondary"
               size="md"
-              onClick={handleSave}
-              disabled={isSaving || isLoading}
-              isLoading={isSaving}
-              className="w-full"
+              onClick={handleLogout}
+              className="w-auto px-8"
             >
-              💾 प्रोफ़ाइल सेव करें
+              🚪 लॉग आउट
             </Button>
           </div>
-
-          {profileData && (
-            <p className="mt-4 text-xs text-slate-500 border-t pt-4">
-              <strong>वर्तमान प्रोफ़ाइल:</strong> {profileData.location}, {profileData.land_size_acre} एकड़,{" "}
-              {profileData.crop_preference}
-            </p>
-          )}
-        </Card>
-      )}
-
-      {/* Settings */}
-      <Card className="mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-4">सेटिंग्स</h3>
-
-        <div className="space-y-3">
-          <button className="w-full text-left p-3 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-900">🔔 सूचनाएं</span>
-            <span className="text-lg">→</span>
-          </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-900">🗣️ भाषा</span>
-            <span className="text-sm text-slate-600">हिंदी</span>
-          </button>
-          <button className="w-full text-left p-3 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-between">
-            <span className="text-sm font-medium text-slate-900">🔒 गोपनीयता</span>
-            <span className="text-lg">→</span>
-          </button>
         </div>
-      </Card>
+      </div>
 
-      {/* About */}
-      <Card className="mb-6 bg-blue-50">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">ℹ️ Grameen AI Sahayak</h3>
-        <p className="text-xs text-blue-800">v1.0.0</p>
-        <p className="text-xs text-blue-700 mt-2">
-          © 2024 - सभी अधिकार सुरक्षित
-        </p>
-      </Card>
-
-      {/* Logout button */}
-      <Button
-        variant="secondary"
-        size="lg"
-        onClick={handleLogout}
-        className="w-full mb-4"
-      >
-        🚪 लॉग आउट करें
-      </Button>
-
-      {/* Home button */}
-      <Link href="/">
-        <Button size="lg" className="w-full">
-          🏠 होम पेज
-        </Button>
-      </Link>
+      {/* Full width footer */}
+      <div className="border-t border-slate-200 pt-8 text-center mt-12">
+        <p className="text-sm font-semibold text-slate-900">Grameen AI Sahayak</p>
+        <p className="text-xs text-slate-500 mt-1">v1.0.0 • © 2024</p>
+      </div>
     </main>
   );
 }
