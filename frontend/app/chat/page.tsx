@@ -47,6 +47,72 @@ function ChatContent() {
   }, [topic, language]);
 
   useEffect(() => {
+    const normalizedTopic = topic.trim();
+    const defaultPrompt = t("ask-here", language).trim();
+
+    // When user arrives from voice/home with a topic, auto-submit it as the first query.
+    if (!normalizedTopic || normalizedTopic === defaultPrompt) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const runInitialQuery = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      const userMessage: Message = {
+        id: `${Date.now()}-topic-user`,
+        text: normalizedTopic,
+        isUser: true,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, userMessage]);
+
+      try {
+        const response = await queryAdvisory(normalizedTopic);
+        if (isCancelled) {
+          return;
+        }
+
+        const aiMessage: Message = {
+          id: `${Date.now()}-topic-ai`,
+          text: response.answer,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+        await speakResponse(response.answer);
+      } catch (err) {
+        if (isCancelled) {
+          return;
+        }
+
+        const errorMessage = err instanceof Error ? err.message : t("error", language);
+        setError(errorMessage);
+
+        const errorAiMessage: Message = {
+          id: `${Date.now()}-topic-err`,
+          text: `✗ ${errorMessage}\n\n${t("please-retry", language)}`,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, errorAiMessage]);
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void runInitialQuery();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [topic, language]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 

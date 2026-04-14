@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=(".env", "../.env"), extra="ignore")
 
     app_env: str = Field(default="development", alias="APP_ENV")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
@@ -30,7 +30,13 @@ class Settings(BaseSettings):
 
     openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
     hf_api_token: str | None = Field(default=None, alias="HF_API_TOKEN")
+    google_api_key: str | None = Field(default=None, alias="GOOGLE_API_KEY")
     google_tts_api_key: str | None = Field(default=None, alias="GOOGLE_TTS_API_KEY")
+
+    @property
+    def llm_api_key(self) -> str | None:
+        # Backward compatible fallback: allow legacy Google key field for LLM too.
+        return self.openai_api_key or self.google_api_key or self.google_tts_api_key
 
     @property
     def cors_origins(self) -> List[str]:

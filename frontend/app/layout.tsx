@@ -1,12 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppProvider } from "@/lib/AppContext";
 import LanguageToggle from "@/components/LanguageToggle";
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "Grameen AI Sahayak | ग्रामीण एआई सहायक",
   description: "आपकी मदद के लिए तैयार - Voice-first AI assistant for rural India",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

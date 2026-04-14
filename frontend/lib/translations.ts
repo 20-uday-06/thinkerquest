@@ -110,7 +110,6 @@ export const translations: Record<Language, Record<string, string>> = {
     "health-faq-2-a": "छाछ या नमक-चीनी का घोल पिएं। तेल वाली चीजें न खाएं।",
     "health-faq-3-q": "सिर दर्द से बचने के लिए क्या करें?",
     "health-faq-3-a": "पर्याप्त पानी पिएं, शांत वातावरण में रहें। नियमित नींद लें।",
-    "listen": "सुनें",
 
     // Response
     "your-answer": "आपकी",
@@ -236,7 +235,6 @@ export const translations: Record<Language, Record<string, string>> = {
     "health-faq-2-a": "Drink buttermilk or salt-sugar solution. Avoid oily foods.",
     "health-faq-3-q": "How to prevent headaches?",
     "health-faq-3-a": "Drink plenty of water, stay in calm environment. Get regular sleep.",
-    "listen": "Listen",
 
     // Response
     "your-answer": "Your",
