@@ -18,9 +18,9 @@ function ResponseContent() {
       <div className="text-8xl mb-6 animate-bounce-subtle">✓</div>
 
       {/* Response display */}
-      <Card className="max-w-md mb-8 bg-rural-greenLight border-2 border-rural-green text-center">
-        <h2 className="text-xl font-bold text-slate-900 mb-4">आपकी {topic}</h2>
-        <p className="text-sm text-slate-700 leading-6 mb-4">{response}</p>
+      <Card className="max-w-md mb-8 bg-rural-green border-2 border-rural-green text-center">
+        <h2 className="text-xl font-bold text-white mb-4">आपकी {topic}</h2>
+        <p className="text-sm text-gray-100 leading-6 mb-4">{response}</p>
 
         <button
           onClick={() => {
@@ -32,7 +32,7 @@ function ResponseContent() {
               window.speechSynthesis.speak(utterance);
             }
           }}
-          className="text-sm text-rural-greenDark hover:opacity-70 flex items-center justify-center gap-2 w-full"
+          className="text-sm text-white hover:opacity-70 flex items-center justify-center gap-2 w-full font-semibold"
         >
           <span>🔊</span>
           <span>सुनें</span>
