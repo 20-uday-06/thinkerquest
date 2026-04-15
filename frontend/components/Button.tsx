@@ -19,22 +19,22 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const baseClasses =
-    "font-medium rounded-2xl transition-all duration-200 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+    "inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-[0.01em] transition-all duration-200 active:scale-[0.98] disabled:opacity-55 disabled:cursor-not-allowed disabled:shadow-none";
 
   const variantClasses = {
     primary:
-      "bg-rural-green text-white shadow-soft hover:bg-rural-greenDark active:bg-rural-greenDark",
+      "bg-gradient-to-br from-rural-green to-rural-greenDark text-white shadow-lux hover:shadow-lux-lg hover:-translate-y-0.5",
     secondary:
-      "bg-rural-greenLight text-rural-greenDark hover:bg-green-200 shadow-soft",
-    ghost: "hover:bg-rural-cream text-slate-700",
+      "bg-rural-greenLight text-rural-greenDark hover:bg-emerald-100 shadow-soft border border-emerald-200/70",
+    ghost: "hover:bg-rural-greenLight/70 text-rural-greenDark",
     outline:
-      "border-2 border-rural-green text-rural-green hover:bg-rural-greenLight",
+      "border border-rural-green/45 text-rural-greenDark hover:bg-rural-greenLight/65",
   };
 
   const sizeClasses = {
-    sm: "px-4 py-2 text-sm",
-    md: "px-6 py-3 text-base",
-    lg: "px-8 py-4 text-lg",
+    sm: "px-4 py-2.5 text-sm",
+    md: "px-6 py-3 text-[15px]",
+    lg: "px-8 py-3.5 text-base",
   };
 
   return (

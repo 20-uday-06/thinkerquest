@@ -26,63 +26,52 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-rural-greenLight via-rural-cream to-rural-yellow">
-      {/* Background decoration */}
-      <div className="absolute top-0 right-0 w-40 h-40 bg-rural-yellow rounded-full opacity-30 blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-40 h-40 bg-rural-green rounded-full opacity-20 blur-3xl" />
+    <main className="min-h-screen w-full px-5 py-8 app-shell flex items-center justify-center">
+      <section className="w-full max-w-4xl rounded-[2rem] overflow-hidden border border-rural-green/20 shadow-lux-lg bg-white/90">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="hero-gradient p-8 md:p-10 relative overflow-hidden">
+            <div className="absolute -top-10 -right-8 h-36 w-36 rounded-full bg-white/10 blur-2xl" aria-hidden />
+            <div className="absolute -bottom-12 left-0 h-36 w-36 rounded-full bg-amber-200/20 blur-2xl" aria-hidden />
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center text-center max-w-md">
-        {/* Icon */}
-        <div className="text-7xl mb-8 animate-bounce-subtle">🌾</div>
+            <p className="text-4xl mb-4">{t("greeting", language)}</p>
+            <h1 className="text-4xl md:text-5xl luxury-heading leading-tight mb-3">{t("app-name", language)}</h1>
+            <h2 className="text-lg md:text-xl text-emerald-100/90 font-semibold mb-6">{t("app-subtitle", language)}</h2>
 
-        {/* App name */}
-        <h1 className="text-4xl font-bold text-slate-900 mb-3">
-          {t("app-name", language)}
-        </h1>
-        <h2 className="text-2xl font-semibold text-rural-greenDark mb-2">
-          {t("app-subtitle", language)}
-        </h2>
-
-        {/* Greeting */}
-        <p className="text-5xl mb-6">{t("greeting", language)}</p>
-
-        {/* Subtitle */}
-        <p className="text-xl text-slate-700 mb-12 leading-relaxed">
-          {t("landing-subtitle", language)}
-        </p>
-
-        {/* Description */}
-        <p className="text-sm text-slate-600 mb-12 leading-7 font-semibold">
-          {t("landing-description", language)}
-        </p>
-
-        {/* CTA Button */}
-        <Button
-          size="lg"
-          onClick={handleStart}
-          className="mb-8 shadow-soft-lg hover:shadow-lg"
-        >
-          <span className="font-semibold">{t("start-button", language)}</span>
-          <span>→</span>
-        </Button>
-
-        {/* Features preview */}
-        <div className="mt-12 grid grid-cols-3 gap-4 w-full">
-          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-3xl mb-2">🎤</div>
-            <p className="text-s text-slate-700 font-medium">{t("voice", language)}</p>
+            <p className="text-sm md:text-base text-emerald-50/90 leading-7 max-w-md">
+              {t("landing-subtitle", language)}
+            </p>
           </div>
-          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-3xl mb-2">💬</div>
-            <p className="text-s text-slate-700 font-medium">{t("chat", language)}</p>
-          </div>
-          <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-xl p-3 text-center">
-            <div className="text-3xl mb-2">📵</div>
-            <p className="text-s text-slate-700 font-medium">{t("offline", language)}</p>
+
+          <div className="p-8 md:p-10 bg-gradient-to-b from-white/95 to-rural-greenLight/40">
+            <div className="text-6xl mb-5 animate-float-slow">🌾</div>
+            <p className="text-sm text-slate-700 leading-7 font-medium mb-8">{t("landing-description", language)}</p>
+
+            <Button
+              size="lg"
+              onClick={handleStart}
+              className="w-full mb-7"
+            >
+              <span>{t("start-button", language)}</span>
+              <span>→</span>
+            </Button>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
+                <div className="text-2xl mb-1">🎤</div>
+                <p className="text-xs font-semibold text-slate-700">{t("voice", language)}</p>
+              </div>
+              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
+                <div className="text-2xl mb-1">💬</div>
+                <p className="text-xs font-semibold text-slate-700">{t("chat", language)}</p>
+              </div>
+              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
+                <div className="text-2xl mb-1">📵</div>
+                <p className="text-xs font-semibold text-slate-700">{t("offline", language)}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </main>
   );
 }

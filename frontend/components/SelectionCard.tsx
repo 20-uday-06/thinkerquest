@@ -20,16 +20,16 @@ export default function SelectionCard({
   return (
     <button
       onClick={onClick}
-      className={`w-full rounded-2xl p-6 transition-all duration-200 active:scale-95 ${
+      className={`w-full rounded-2xl p-6 text-left transition-all duration-300 active:scale-[0.99] ${
         isSelected
-          ? "bg-rural-green text-white shadow-soft-lg scale-105"
-          : "bg-rural-white text-slate-900 shadow-soft hover:shadow-soft-lg border-2 border-transparent"
+          ? "bg-gradient-to-br from-rural-green to-rural-greenDark text-white shadow-lux-lg border border-emerald-500/30"
+          : "glass-panel text-slate-900 shadow-soft border border-rural-green/15 hover:shadow-lux"
       }`}
     >
       <div className="text-4xl mb-3">{icon}</div>
-      <h3 className="text-xl font-semibold">{label}</h3>
+      <h3 className="text-xl font-semibold luxury-heading">{label}</h3>
       {description && (
-        <p className={`text-sm mt-1 ${isSelected ? "text-green-50" : "text-slate-600"}`}>
+        <p className={`text-sm mt-2 leading-6 ${isSelected ? "text-emerald-50" : "text-slate-700"}`}>
           {description}
         </p>
       )}

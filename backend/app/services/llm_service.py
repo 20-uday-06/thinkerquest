@@ -3,20 +3,27 @@ import time
 import httpx
 
 
+PRIMARY_GEMINI_MODEL = "gemini-2.5-flash"
+
 DEFAULT_GEMINI_MODELS = [
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash",
+    PRIMARY_GEMINI_MODEL,
 ]
 DETAILED_GEMINI_MODELS = [
-    "gemini-2.5-pro",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash",
+    PRIMARY_GEMINI_MODEL,
 ]
+
+
+def _is_hard_quota_exhausted(exc: httpx.HTTPStatusError) -> bool:
+    if exc.response.status_code != 429:
+        return False
+
+    try:
+        payload = exc.response.json()
+    except Exception:
+        return False
+
+    message = str(payload.get("error", {}).get("message", "")).lower()
+    return "quota exceeded" in message and "limit: 0" in message
 
 
 def _extract_text(payload: dict) -> str:
@@ -86,6 +93,9 @@ def generate_with_gemini(
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 status = exc.response.status_code
+
+                if _is_hard_quota_exhausted(exc):
+                    break
 
                 # Retry transient provider errors/rate limits.
                 if status in {429, 500, 502, 503, 504} and attempt < 2:

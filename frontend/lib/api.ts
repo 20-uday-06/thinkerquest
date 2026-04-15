@@ -53,6 +53,8 @@ export async function getProfile(phoneNumber?: string): Promise<UserProfile> {
 }
 
 export async function updateProfile(payload: {
+  name?: string;
+  phone_number?: string;
   location: string;
   land_size_acre: number;
   crop_preference: string;

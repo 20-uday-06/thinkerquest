@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Card from "@/components/Card";
 import Button from "@/components/Button";
-import LanguageToggle from "@/components/LanguageToggle";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
 import { completeOnboarding } from "@/lib/api";
@@ -46,7 +45,7 @@ export default function OnboardingDetailsPage() {
   // Redirect if no role selected
   if (!userRole) {
     return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-rural-greenLight via-rural-cream to-rural-yellow">
+      <div className="min-h-screen w-full flex flex-col items-center justify-center p-6 app-shell">
         <Card className="bg-red-50 border-l-4 border-l-red-400 max-w-md">
           <p className="text-red-900 font-semibold mb-2">❌ {t("onboarding-error", language)}</p>
           <p className="text-sm text-red-800">{t("error", language)}</p>
@@ -167,19 +166,19 @@ export default function OnboardingDetailsPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col p-6 bg-gradient-to-br from-rural-greenLight via-rural-cream to-rural-yellow">
+    <main className="min-h-screen w-full flex flex-col p-5 md:p-7 app-shell">
       {/* Header */}
-      <div className="mb-8 text-center">
+      <div className="mb-6 text-center max-w-2xl mx-auto w-full rounded-3xl hero-gradient px-6 py-6 border border-white/20 shadow-lux">
         <Link
           href="/user-selection"
-          className="text-2xl hover:opacity-70 transition-opacity inline-block mb-4"
+          className="h-9 w-9 rounded-full bg-white/20 border border-white/30 flex items-center justify-center text-white hover:bg-white/30 transition-colors inline-flex mb-4"
         >
-          ←
+          <span className="text-xl">←</span>
         </Link>
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">
+        <h1 className="text-2xl md:text-3xl luxury-heading text-white mb-1">
           {t("onboarding-details", language)}
         </h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-emerald-100/95">
           {userRole === "किसान" && t("onboarding-farmer-subtitle", language)}
           {userRole === "छात्र" && t("onboarding-student-subtitle", language)}
           {userRole === "मजदूर" && t("onboarding-worker-subtitle", language)}
@@ -187,7 +186,7 @@ export default function OnboardingDetailsPage() {
       </div>
 
       {/* Form Card */}
-      <Card className="max-w-md mx-auto w-full">
+      <Card className="max-w-2xl mx-auto w-full bg-white/88 border border-rural-green/20">
         {/* Error message */}
         {error && (
           <div className="bg-red-50 border-l-4 border-l-red-400 p-3 rounded mb-6 text-sm text-red-800">
@@ -198,7 +197,7 @@ export default function OnboardingDetailsPage() {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name field - Common for all roles */}
           <div>
-            <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+            <label className="muted-label mb-2 block">
               {t("onboarding-name", language)} *
             </label>
             <input
@@ -208,13 +207,13 @@ export default function OnboardingDetailsPage() {
               onChange={handleInputChange}
               placeholder={t("onboarding-name-ph", language)}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+              className="field-input text-sm disabled:opacity-60"
             />
           </div>
 
           {/* Phone number field - Common for all roles - READ ONLY */}
           <div>
-            <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+            <label className="muted-label mb-2 block">
               {t("onboarding-phone", language)} *
             </label>
             <input
@@ -223,14 +222,15 @@ export default function OnboardingDetailsPage() {
               value={formData.phone_number}
               readOnly
               placeholder={t("onboarding-phone-ph", language)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-slate-100 cursor-not-allowed text-slate-700"
+              disabled={isLoading}
+              className="field-input text-sm disabled:opacity-60"
             />
             <p className="text-xs text-slate-500 mt-1">लॉगिन फोन नंबर से सेट</p>
           </div>
 
           {/* Location field - Common for all roles */}
           <div>
-            <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+            <label className="muted-label mb-2 block">
               {t("onboarding-location", language)}
             </label>
             <input
@@ -240,7 +240,7 @@ export default function OnboardingDetailsPage() {
               onChange={handleInputChange}
               placeholder={t("onboarding-location-ph", language)}
               disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+              className="field-input text-sm disabled:opacity-60"
             />
           </div>
 
@@ -248,7 +248,7 @@ export default function OnboardingDetailsPage() {
           {userRole === "किसान" && (
             <>
               <div>
-                <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                <label className="muted-label mb-2 block">
                   {t("onboarding-crop", language)}
                 </label>
                 <input
@@ -258,12 +258,12 @@ export default function OnboardingDetailsPage() {
                   onChange={handleInputChange}
                   placeholder={t("onboarding-crop-ph", language)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+                  className="field-input text-sm disabled:opacity-60"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                <label className="muted-label mb-2 block">
                   {t("onboarding-land-size", language)}
                 </label>
                 <input
@@ -275,7 +275,7 @@ export default function OnboardingDetailsPage() {
                   inputMode="decimal"
                   step="0.1"
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+                  className="field-input text-sm disabled:opacity-60"
                 />
               </div>
             </>
@@ -285,7 +285,7 @@ export default function OnboardingDetailsPage() {
           {userRole === "छात्र" && (
             <>
               <div>
-                <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                <label className="muted-label mb-2 block">
                   {t("onboarding-field", language)}
                 </label>
                 <input
@@ -295,12 +295,12 @@ export default function OnboardingDetailsPage() {
                   onChange={handleInputChange}
                   placeholder={t("onboarding-field-ph", language)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+                  className="field-input text-sm disabled:opacity-60"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+                <label className="muted-label mb-2 block">
                   {t("onboarding-interest", language)}
                 </label>
                 <input
@@ -310,7 +310,7 @@ export default function OnboardingDetailsPage() {
                   onChange={handleInputChange}
                   placeholder={t("onboarding-interest-ph", language)}
                   disabled={isLoading}
-                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+                  className="field-input text-sm disabled:opacity-60"
                 />
               </div>
             </>
@@ -319,7 +319,7 @@ export default function OnboardingDetailsPage() {
           {/* INTEGRATION: Worker-specific fields */}
           {userRole === "मजदूर" && (
             <div>
-              <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
+              <label className="muted-label mb-2 block">
                 {t("onboarding-skill", language)}
               </label>
               <input
@@ -329,7 +329,7 @@ export default function OnboardingDetailsPage() {
                 onChange={handleInputChange}
                 placeholder={t("onboarding-skill-ph", language)}
                 disabled={isLoading}
-                className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+                className="field-input text-sm disabled:opacity-60"
               />
             </div>
           )}
@@ -347,12 +347,9 @@ export default function OnboardingDetailsPage() {
       </Card>
 
       {/* Info text */}
-      <p className="text-xs text-slate-600 text-center mt-6 max-w-md mx-auto px-4 leading-relaxed">
+      <p className="text-xs text-slate-700 text-center mt-6 max-w-2xl mx-auto px-4 leading-relaxed">
         {t("onboarding-info", language)}
       </p>
-
-      {/* INTEGRATION: Language Toggler */}
-      <LanguageToggle />
     </main>
   );
 }

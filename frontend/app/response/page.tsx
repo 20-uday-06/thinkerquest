@@ -13,14 +13,14 @@ function ResponseContent() {
   const topic = searchParams.get("topic") || "सलाह";
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center p-6 bg-gradient-to-br from-rural-greenLight via-rural-cream to-rural-yellow">
+    <main className="min-h-screen w-full flex flex-col items-center justify-center p-6 app-shell">
       {/* Success icon */}
-      <div className="text-8xl mb-6 animate-bounce-subtle">✓</div>
+      <div className="text-7xl mb-5 animate-float-slow">✓</div>
 
       {/* Response display */}
-      <Card className="max-w-md mb-8 bg-rural-green border-2 border-rural-green text-center">
-        <h2 className="text-xl font-bold text-white mb-4">आपकी {topic}</h2>
-        <p className="text-sm text-gray-100 leading-6 mb-4">{response}</p>
+      <Card className="max-w-lg mb-7 bg-white/90 border border-rural-green/25 text-center">
+        <h2 className="text-2xl luxury-heading text-rural-greenDark mb-4">आपकी {topic}</h2>
+        <p className="text-sm text-slate-800 leading-7 mb-4">{response}</p>
 
         <button
           onClick={() => {
@@ -32,7 +32,7 @@ function ResponseContent() {
               window.speechSynthesis.speak(utterance);
             }
           }}
-          className="text-sm text-white hover:opacity-70 flex items-center justify-center gap-2 w-full font-semibold"
+          className="text-sm text-rural-greenDark hover:opacity-70 inline-flex items-center justify-center gap-2 border border-rural-green/25 rounded-full px-3 py-1.5"
         >
           <span>🔊</span>
           <span>सुनें</span>
@@ -40,8 +40,8 @@ function ResponseContent() {
       </Card>
 
       {/* Continuation prompt */}
-      <Card className="max-w-md mb-8 text-center bg-rural-white">
-        <p className="text-lg font-semibold text-slate-900 mb-4">
+      <Card className="max-w-lg mb-8 text-center bg-white/88 border border-rural-green/20">
+        <p className="text-lg font-semibold text-slate-900 mb-4 luxury-heading">
           क्या आप और कुछ पूछना चाहते हैं?
         </p>
 
@@ -58,7 +58,7 @@ function ResponseContent() {
       </Card>
 
       {/* Navigation buttons */}
-      <div className="max-w-md w-full space-y-2">
+      <div className="max-w-lg w-full space-y-2">
         <Link href="/chat" className="block">
           <Button size="md" variant="outline" className="w-full">
             💬 और सवाल

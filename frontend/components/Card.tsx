@@ -18,9 +18,9 @@ export default function Card({
   return (
     <div
       onClick={onClick}
-      className={`rounded-2xl bg-rural-white p-5 shadow-soft transition-all duration-200 ${
+      className={`glass-panel rounded-2xl p-5 shadow-soft transition-all duration-300 ${
         hover
-          ? "cursor-pointer hover:shadow-soft-lg hover:scale-105 active:scale-98"
+          ? "cursor-pointer hover:shadow-soft-lg hover:-translate-y-0.5 active:scale-[0.99]"
           : ""
       } ${className}`}
     >
