@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import re
 
 from sqlalchemy.orm import Session
 
@@ -10,6 +11,22 @@ from app.services.profile_service import get_or_create_profile
 from app.services.weather_service import get_weather_context
 
 settings = get_settings()
+
+
+def _contains_token(text: str, token: str) -> bool:
+    if not token:
+        return False
+
+    # Use word boundaries for Latin tokens to avoid false positives such as "hi" in "nahi".
+    if token.isascii() and any(ch.isalnum() for ch in token):
+        pattern = rf"(?<![a-z0-9]){re.escape(token)}(?![a-z0-9])"
+        return re.search(pattern, text) is not None
+
+    return token in text
+
+
+def _contains_any_token(text: str, tokens: list[str]) -> bool:
+    return any(_contains_token(text, token) for token in tokens)
 
 
 def _normalize_role(role: str | None) -> str:
@@ -46,69 +63,69 @@ def _is_agri_query(text: str) -> bool:
         "barish",
         "rain",
     ]
-    return any(token in text for token in agri_tokens)
+    return _contains_any_token(text, agri_tokens)
 
 
 def _simple_rule_reply(query_text: str, location: str, crop: str, role: str) -> tuple[str, list[str]]:
     text = query_text.strip().lower()
     normalized_role = _normalize_role(role)
 
-    if any(token in text for token in ["स्वास्थ्य", "health", "बुखार", "दवाई", "डॉक्टर", "swasthya", "bukhar", "doctor", "medicine"]):
+    if _contains_any_token(text, ["स्वास्थ्य", "health", "बुखार", "दवाई", "डॉक्टर", "swasthya", "bukhar", "doctor", "medicine"]):
         return (
             "अगर तेज बुखार, सांस में दिक्कत, छाती दर्द, या लगातार कमजोरी हो तो तुरंत नजदीकी स्वास्थ्य केंद्र जाएं। हल्की समस्या में साफ पानी, संतुलित भोजन, और आराम रखें।",
             ["health_general"],
         )
 
-    if any(token in text for token in ["योजना", "scheme", "सरकारी", "सब्सिडी", "लाभ", "yojana", "sarkari", "subsidy", "labh"]):
+    if _contains_any_token(text, ["योजना", "scheme", "सरकारी", "सब्सिडी", "लाभ", "yojana", "sarkari", "subsidy", "labh"]):
         return (
             "सरकारी योजना के लिए अपना आधार, बैंक खाता, और मोबाइल नंबर तैयार रखें। नजदीकी CSC/जन सेवा केंद्र या संबंधित विभाग में आवेदन स्थिति जांचें और रसीद सुरक्षित रखें।",
             ["gov_scheme_general"],
         )
 
-    if normalized_role == "छात्र" and any(token in text for token in ["पढ़ाई", "education", "skill", "स्किल", "कोर्स", "career", "रोजगार", "नौकरी", "padhai", "course", "naukri", "job"]):
+    if normalized_role == "छात्र" and _contains_any_token(text, ["पढ़ाई", "education", "skill", "स्किल", "कोर्स", "career", "रोजगार", "नौकरी", "padhai", "course", "naukri", "job"]):
         return (
             "अपने लक्ष्य के अनुसार 1 मुख्य कौशल चुनें, रोज 60-90 मिनट अभ्यास करें, और हर सप्ताह छोटा प्रोजेक्ट बनाएं। पास के कॉलेज/स्किल सेंटर और सरकारी स्कॉलरशिप/स्किल योजनाएं जरूर देखें।",
             ["student_guidance"],
         )
 
-    if normalized_role == "मजदूर" and any(token in text for token in ["काम", "job", "मजदूरी", "सुरक्षा", "contract", "salary", "majdoori", "kam", "suraksha", "payment"]):
+    if normalized_role == "मजदूर" and _contains_any_token(text, ["काम", "job", "मजदूरी", "सुरक्षा", "contract", "salary", "majdoori", "kam", "suraksha", "payment"]):
         return (
             "काम शुरू करने से पहले मजदूरी दर, कार्य घंटे, और भुगतान तारीख लिखित में तय करें। सुरक्षा उपकरण (दस्ताने/जूते/हेलमेट) मांगें और भुगतान का रिकॉर्ड रखें।",
             ["worker_guidance"],
         )
 
-    if any(token in text for token in ["hello", "hi", "नमस्ते", "सुन", "आवाज", "आवाज़", "voice", "namaste", "awaz"]):
+    if _contains_any_token(text, ["hello", "hi", "नमस्ते", "सुन", "आवाज", "आवाज़", "voice", "namaste", "awaz"]):
         return (
             "हाँ, आपकी आवाज सुन पा रहा हूँ। आप खेती, स्वास्थ्य, शिक्षा/कौशल या सरकारी योजना से जुड़ा सवाल पूछ सकते हैं।",
             ["assistant_greeting"],
         )
 
-    if any(token in text for token in ["बुवाई", "sowing", "buwai", "bowai"]):
+    if _contains_any_token(text, ["बुवाई", "sowing", "buwai", "bowai"]):
         return (
             f"{location} में {crop} की बुवाई आमतौर पर अक्टूबर से नवंबर के बीच करें। मिट्टी में नमी हो तो अंकुरण अच्छा होगा।",
             ["crop_calendar_uttarakhand.json"],
         )
-    if any(token in text for token in ["खाद", "fertilizer", "fertiliser", "khad", "khaad"]):
+    if _contains_any_token(text, ["खाद", "fertilizer", "fertiliser", "khad", "khaad"]):
         return (
             f"{crop} के लिए नाइट्रोजन, फॉस्फोरस और पोटाश संतुलित मात्रा में दें। अपनी ज़मीन की जांच रिपोर्ट हो तो उसी के अनुसार मात्रा तय करें।",
             ["fertilizer_basics_north_india.json"],
         )
-    if any(token in text for token in ["मौसम", "weather", "mausam", "barish", "rain"]):
+    if _contains_any_token(text, ["मौसम", "weather", "mausam", "barish", "rain"]):
         return (
             f"अगर अगले 24 घंटों में बारिश की संभावना हो तो सिंचाई टालें। {location} के लिए खेत में नमी देखकर ही पानी दें।",
             ["weather_rules_general.json"],
         )
-    if any(token in text for token in ["सिंचाई", "irrigation", "पानी", "water", "sinchai", "pani", "paani"]):
+    if _contains_any_token(text, ["सिंचाई", "irrigation", "पानी", "water", "sinchai", "pani", "paani"]):
         return (
             f"{crop} में सिंचाई मिट्टी की नमी और मौसम देखकर करें। पहली सिंचाई क्रिटिकल स्टेज पर करें और पानी भराव से बचें।",
             ["weather_rules_general.json"],
         )
-    if any(token in text for token in ["पैदावार", "yield", "paidavar", "production"]):
+    if _contains_any_token(text, ["पैदावार", "yield", "paidavar", "production"]):
         return (
             f"{crop} की पैदावार बढ़ाने के लिए समय पर बुवाई, संतुलित खाद, खरपतवार नियंत्रण और सही सिंचाई शेड्यूल अपनाएं।",
             ["crop_calendar_uttarakhand.json", "fertilizer_basics_north_india.json"],
         )
-    if any(token in text for token in ["फसल", "crop", "fasal"]):
+    if _contains_any_token(text, ["फसल", "crop", "fasal"]):
         return (
             f"{location} और आपकी पसंद {crop} को देखते हुए अभी रबी सीजन की तैयारी रखें। खेत की जुताई और बीज उपचार पहले करें।",
             ["crop_selection_north_india.json"],
