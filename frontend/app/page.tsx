@@ -11,7 +11,7 @@ import { t } from "@/lib/translations";
 
 export default function HomePage() {
   const router = useRouter();
-  const { userRole, isOnline, hasCompletedOnboarding, language } = useAppContext();
+  const { userRole, isOnline, hasCompletedOnboarding, isLoggedIn, language } = useAppContext();
   const [isListening, setIsListening] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [greeting, setGreeting] = useState("");
@@ -23,10 +23,17 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (mounted && !hasCompletedOnboarding) {
-      router.push("/landing");
+    if (mounted) {
+      // Check if user is logged in
+      if (!isLoggedIn) {
+        router.push("/landing");
+      }
+      // Check if onboarding is completed
+      else if (!hasCompletedOnboarding) {
+        router.push("/user-selection");
+      }
     }
-  }, [hasCompletedOnboarding, router, mounted]);
+  }, [isLoggedIn, hasCompletedOnboarding, router, mounted]);
 
   useEffect(() => {
     // Set personalized greeting based on time and language

@@ -49,6 +49,7 @@ class UserProfileResponse(BaseModel):
     interest_area: Optional[str]
     skill: Optional[str]
     worker_location: Optional[str]
+    preferred_language: str
     updated_at: datetime
 
     model_config = {"from_attributes": True}
@@ -77,3 +78,32 @@ class OnboardingDetailsRequest(BaseModel):
     @classmethod
     def normalize_text(cls, value: Optional[str]) -> Optional[str]:
         return value.strip() if value else None
+
+
+# Auth schemas
+class LoginRequest(BaseModel):
+    """Request schema for login with phone number"""
+    phone_number: str = Field(min_length=10, max_length=20)
+
+    @field_validator("phone_number")
+    @classmethod
+    def validate_phone(cls, value: str) -> str:
+        """Validate and normalize phone number - must be 10 digits"""
+        cleaned = value.strip().replace(" ", "").replace("-", "")
+        if not cleaned.isdigit() or len(cleaned) != 10:
+            raise ValueError("Phone number must be exactly 10 digits")
+        return cleaned
+
+
+class LoginResponse(BaseModel):
+    """Response schema for login"""
+    user_id: int
+    profile: UserProfileResponse
+    is_new_user: bool
+
+
+class CheckPhoneResponse(BaseModel):
+    """Response schema for phone existence check"""
+    exists: bool
+    profile: Optional[UserProfileResponse] = None
+    is_new_user: bool

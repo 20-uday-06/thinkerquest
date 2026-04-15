@@ -8,16 +8,21 @@ import { t } from "@/lib/translations";
 
 export default function LandingPage() {
   const router = useRouter();
-  const { hasCompletedOnboarding, language } = useAppContext();
+  const { hasCompletedOnboarding, isLoggedIn, language } = useAppContext();
 
   useEffect(() => {
-    if (hasCompletedOnboarding) {
+    // If user is logged in and completed onboarding, go to home
+    if (isLoggedIn && hasCompletedOnboarding) {
       router.push("/");
     }
-  }, [hasCompletedOnboarding, router]);
+    // If user is logged in but hasn't completed onboarding, go to user selection
+    else if (isLoggedIn && !hasCompletedOnboarding) {
+      router.push("/user-selection");
+    }
+  }, [isLoggedIn, hasCompletedOnboarding, router]);
 
   const handleStart = () => {
-    router.push("/user-selection");
+    router.push("/login");
   };
 
   return (

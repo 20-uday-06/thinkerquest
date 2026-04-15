@@ -27,6 +27,11 @@ interface AppContextType {
   setProfileData: (data: UserProfileData | null) => void;
   language: Language;
   setLanguage: (lang: Language) => void;
+  currentUserPhone: string | null;
+  setCurrentUserPhone: (phone: string | null) => void;
+  isNewUser: boolean;
+  setIsNewUser: (isNew: boolean) => void;
+  isLoggedIn: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -37,7 +42,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
   const [language, setLanguage] = useState<Language>("hi");
+  const [currentUserPhone, setCurrentUserPhone] = useState<string | null>(null);
+  const [isNewUser, setIsNewUser] = useState(false);
   const [mounted, setMounted] = useState(false);
+
+  const isLoggedIn = currentUserPhone !== null;
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -58,6 +67,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           setHasCompletedOnboarding(state.hasCompletedOnboarding);
         if (state.profileData) setProfileData(state.profileData);
         if (state.language) setLanguage(state.language);
+        if (state.currentUserPhone) setCurrentUserPhone(state.currentUserPhone);
+        if (state.isNewUser !== undefined) setIsNewUser(state.isNewUser);
       } catch (error) {
         console.error("Failed to load app state from localStorage:", error);
       }
@@ -97,10 +108,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           hasCompletedOnboarding,
           profileData,
           language,
+          currentUserPhone,
+          isNewUser,
         })
       );
     }
-  }, [userRole, hasCompletedOnboarding, profileData, language, mounted]);
+  }, [userRole, hasCompletedOnboarding, profileData, language, currentUserPhone, isNewUser, mounted]);
 
   return (
     <AppContext.Provider
@@ -115,6 +128,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setProfileData,
         language,
         setLanguage,
+        currentUserPhone,
+        setCurrentUserPhone,
+        isNewUser,
+        setIsNewUser,
+        isLoggedIn,
       }}
     >
       {children}

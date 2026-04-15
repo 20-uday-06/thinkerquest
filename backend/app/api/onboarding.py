@@ -23,5 +23,5 @@ def complete_onboarding(
     - Student: requires location, field, interest
     - Worker: requires location, skill
     """
-    profile = save_onboarding_details(db, payload)
+    profile = save_onboarding_details(db, payload, payload.phone_number)
     return UserProfileResponse.model_validate(profile)

@@ -15,7 +15,7 @@ import type { UserProfile } from "@/lib/types";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { userRole, setUserRole, setHasCompletedOnboarding, language, profileData, setProfileData } = useAppContext();
+  const { userRole, setUserRole, setHasCompletedOnboarding, language, profileData, setProfileData, currentUserPhone, setCurrentUserPhone } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState("");
@@ -46,7 +46,7 @@ export default function ProfilePage() {
       setIsLoading(true);
       setError(null);
       try {
-        const profile = await getProfile();
+        const profile = await getProfile(currentUserPhone || undefined);
         setProfileApiData(profile);
         // INTEGRATION: Load all onboarding and profile fields
         setFormData({
@@ -170,6 +170,7 @@ export default function ProfilePage() {
   const handleLogout = () => {
     setUserRole(null);
     setHasCompletedOnboarding(false);
+    setCurrentUserPhone(null);
     router.push("/landing");
   };
 
