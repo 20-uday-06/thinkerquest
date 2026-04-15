@@ -73,8 +73,26 @@ function ChatContent() {
 
   const streamAssistantMessage = async (messageId: string, fullText: string) => {
     const finalText = sanitizeAssistantText(fullText);
+
+    // For long answers, render instantly so user can see full content during demos.
+    if (finalText.length > 260) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId
+            ? {
+                ...m,
+                text: finalText,
+                status: "done",
+                canSpeak: true,
+              }
+            : m
+        )
+      );
+      return;
+    }
+
     let index = 0;
-    const chunkSize = 3;
+    const chunkSize = 8;
 
     setMessages((prev) =>
       prev.map((m) =>
@@ -103,7 +121,7 @@ function ChatContent() {
           clearInterval(timer);
           resolve();
         }
-      }, 16);
+      }, 8);
     });
   };
 

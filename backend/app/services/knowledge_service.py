@@ -13,10 +13,91 @@ class RetrievedFact:
     content: dict[str, Any]
 
 
+STOPWORDS = {
+    # Hindi stopwords/common particles
+    "का",
+    "की",
+    "के",
+    "में",
+    "पर",
+    "और",
+    "या",
+    "को",
+    "से",
+    "यह",
+    "वह",
+    "जो",
+    "क्या",
+    "कब",
+    "कैसे",
+    "क्यों",
+    "है",
+    "हैं",
+    "था",
+    "थे",
+    "करें",
+    "करना",
+    "लिए",
+    "अगर",
+    "तो",
+    "भी",
+    "मैं",
+    "आप",
+    "हम",
+    "मुझे",
+    "मेरा",
+    "मेरी",
+    "मेरे",
+    "आज",
+    "अभी",
+    # English stopwords
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "to",
+    "of",
+    "in",
+    "on",
+    "for",
+    "and",
+    "or",
+    "with",
+    "by",
+    "at",
+    "from",
+    "what",
+    "when",
+    "how",
+    "why",
+    "today",
+    "now",
+    "please",
+}
+
+
+def _is_meaningful_token(token: str) -> bool:
+    if not token:
+        return False
+
+    if token in STOPWORDS:
+        return False
+
+    # Ignore one-character fragments and pure punctuation-like leftovers.
+    if len(token) <= 1:
+        return False
+
+    return True
+
+
 def _tokenize(text: str) -> set[str]:
     normalized = text.strip().lower()
     normalized = re.sub(r"[^\w\sऀ-ॿ]", " ", normalized)
-    return {token for token in normalized.split() if token}
+    return {token for token in normalized.split() if _is_meaningful_token(token)}
 
 
 @lru_cache
@@ -60,7 +141,8 @@ def retrieve_facts(
             if not record_tokens:
                 continue
 
-            overlap = len(query_tokens.intersection(record_tokens))
+            overlap_tokens = query_tokens.intersection(record_tokens)
+            overlap = len(overlap_tokens)
             if overlap == 0:
                 continue
 

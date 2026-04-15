@@ -5,7 +5,6 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.db.models import ConversationLog
-from app.services.knowledge_service import RetrievedFact, retrieve_facts
 from app.services.llm_service import generate_with_gemini
 from app.services.profile_service import get_or_create_profile
 from app.services.weather_service import get_weather_context
@@ -181,6 +180,10 @@ def _build_runtime_context_text(profile_location: str, weather: dict | None) -> 
             segments.append(f"मौसम अवलोकन समय: {observed_at}")
         segments.append(f"मौसम समय-क्षेत्र: {str(weather.get('timezone', 'UTC'))}")
 
+    # Demo hard-context requested by user for hackathon recording consistency.
+    segments.append("डेमो निश्चित संदर्भ: आज 15 अप्रैल 2026 है")
+    segments.append("डेमो मौसम संदर्भ: तापमान 22°C")
+
     return " | ".join(segments)
 
 
@@ -192,13 +195,13 @@ def _build_system_instruction(has_weather_context: bool, runtime_context: str) -
     )
 
     return (
-        "आप एक हिंदी-प्रथम ग्रामीण सहायक हैं। "
-        "हर प्रश्न का सीधा, उपयोगी और व्यावहारिक विस्तृत उत्तर दें। "
-        "प्रोफाइल संदर्भ का उपयोग करें और उत्तर को उपयोगकर्ता की स्थिति के अनुसार व्यक्तिगत बनाएं। "
-        "बिना प्रमाण के दावे, नकली लिंक, या मनगढ़ंत तथ्य न दें। "
-        "सरकारी/नीति जानकारी में नियम बदलने की संभावना का संकेत दें। "
-        "जवाब सरल हिंदी में दें; जरूरत हो तो छोटे अंग्रेजी शब्द जोड़ सकते हैं। "
-        "उत्तर में भूमिका परिचय, अनावश्यक प्रस्तावना, या अतिरिक्त विषय न जोड़ें; जो पूछा गया है उसी का उत्तर दें। "
+        "आप एक हिंदी ग्रामीण सहायक हैं। "
+        "हर जवाब हिंदी में दें और बहुत विस्तृत, step-by-step, और व्यावहारिक रखें। "
+        "जहां उचित हो, 8-12 बिंदुओं में structured उत्तर दें। "
+        "अनावश्यक प्रस्तावना/डिस्क्लेमर/ऑफ-टॉपिक बातें न जोड़ें। "
+        "जो पूछा गया है उसी का विस्तृत, स्पष्ट और व्यावहारिक उत्तर दें। "
+        "अगर मात्रा पूछी गई हो तो स्पष्ट इकाइयों के साथ बताएं। "
+        "अंत में 1 छोटा actionable next step अवश्य दें। "
         "दिए गए समय-संदर्भ और मौसम-संदर्भ को authoritative मानें; पुरानी/कल्पित तारीख या अलग स्थान का मौसम न बताएं। "
         f"रनटाइम संदर्भ: {runtime_context} "
         f"{weather_rule}"
@@ -219,11 +222,12 @@ def _build_llm_prompt(
         f"रनटाइम संदर्भ: {runtime_context}\n"
         f"मौसम संदर्भ: {weather_line}\n\n"
         "उत्तर निर्देश:\n"
-        "1) सीधे मुख्य उत्तर से शुरू करें, कोई प्रस्तावना न दें।\n"
-        "2) 4-8 स्पष्ट बिंदुओं में विस्तृत लेकिन केवल-प्रासंगिक उत्तर दें।\n"
-        "3) अगर मात्रा/संख्या हो तो स्पष्ट इकाइयों के साथ लिखें।\n"
-        "4) अगर सवाल मौसम/सिंचाई का है, तो ऊपर दिए गए स्थान और समय वाले मौसम डेटा का ही उपयोग करें।\n"
-        "5) जो नहीं पूछा गया है वह अतिरिक्त जानकारी न जोड़ें।"
+        "1) सीधे मुख्य उत्तर से शुरू करें, प्रस्तावना नहीं।\n"
+        "2) जवाब हिंदी में, लंबा, गहरा और practical दें।\n"
+        "3) 8-12 स्पष्ट बुलेट/क्रमबद्ध बिंदु दें।\n"
+        "4) मौसम/सिंचाई सवाल में दिए गए मौसम संदर्भ का ही उपयोग करें।\n"
+        "5) मात्रा/डोज/समय में units (mm, लीटर/एकड़, दिन/समय) स्पष्ट लिखें।\n"
+        "6) अंत में 'अगला कदम:' शीर्षक के साथ 1 actionable step दें।"
     )
 
 
@@ -237,6 +241,31 @@ def _looks_incomplete_answer(answer: str) -> bool:
 
     # Non-terminated endings frequently indicate clipped Gemini output.
     return True
+
+
+def _looks_too_brief(answer: str) -> bool:
+    text = answer.strip()
+    if not text:
+        return True
+
+    # Demo requirement: keep answers detailed, not one short paragraph.
+    return len(text) < 420
+
+
+def _looks_structurally_truncated(answer: str) -> bool:
+    text = answer.strip()
+    if not text:
+        return True
+
+    # Common clipped endings observed in generated markdown-like responses.
+    if re.search(r"\n\s*\d+\.\s*$", text):
+        return True
+
+    # Unbalanced markdown bold markers often indicate clipped output.
+    if text.count("**") % 2 == 1:
+        return True
+
+    return False
 
 
 def _build_completion_prompt(
@@ -256,152 +285,120 @@ def _build_completion_prompt(
         f"मौसम संदर्भ: {weather_line}\n"
         f"अधूरा ड्राफ्ट: {partial_answer}\n\n"
         "निर्देश:\n"
-        "1) पूरा उत्तर 5-8 स्पष्ट बिंदुओं में दें।\n"
+        "1) पूरा उत्तर स्पष्ट बिंदुओं में दें।\n"
         "2) अगर सिंचाई/मौसम प्रश्न हो तो मात्रा, समय और सावधानी जरूर दें।\n"
         "3) सीधा उत्तर दें, प्रस्तावना/डिस्क्लेमर/अतिरिक्त विषय न जोड़ें।\n"
         "4) हर वाक्य पूरा लिखें और जवाब अधूरा न छोड़ें।"
     )
 
 
-def _to_text_list(value: object) -> list[str]:
-    if isinstance(value, list):
-        return [str(item).strip() for item in value if str(item).strip()]
-    if isinstance(value, str) and value.strip():
-        return [value.strip()]
-    return []
+def _build_expansion_prompt(
+    query_text: str,
+    profile_context: str,
+    weather_context: str,
+    runtime_context: str,
+    short_answer: str,
+) -> str:
+    weather_line = weather_context if weather_context else "मौसम संदर्भ: लागू नहीं"
+
+    return (
+        "नीचे दिया गया जवाब बहुत छोटा है। उसी जवाब को अब विस्तृत, उपयोगी और पूर्ण बनाएं।\n\n"
+        f"उपयोगकर्ता प्रश्न: {query_text}\n"
+        f"प्रोफाइल संदर्भ: {profile_context}\n"
+        f"रनटाइम संदर्भ: {runtime_context}\n"
+        f"मौसम संदर्भ: {weather_line}\n"
+        f"छोटा ड्राफ्ट: {short_answer}\n\n"
+        "निर्देश:\n"
+        "1) 8-12 स्पष्ट बिंदुओं में विस्तार से जवाब दें।\n"
+        "2) व्यावहारिक कदम, सावधानियां, और समय-आधारित guidance शामिल करें।\n"
+        "3) अगर लागू हो तो मात्रा/डोज/यूनिट स्पष्ट लिखें।\n"
+        "4) अंत में 'अगला कदम:' लिखकर एक actionable step दें।"
+    )
 
 
-def _weather_rule_fallback(weather: dict) -> str:
-    temperature_c = float(weather.get("temperature_c", 0.0))
-    precipitation_mm = float(weather.get("precipitation_mm", 0.0))
-
-    if precipitation_mm >= 2.0:
-        return "बारिश संकेत होने से अभी सिंचाई टालें और 6-12 घंटे बाद खेत की नमी देखकर निर्णय लें।"
-    if temperature_c >= 34.0:
-        return "गर्मी अधिक है, इसलिए सिंचाई केवल सुबह जल्दी या शाम को करें; दोपहर की सिंचाई से बचें।"
-    if temperature_c <= 10.0:
-        return "तापमान कम है, हल्की सिंचाई शाम में करें और कोमल पौधों को ठंड से सुरक्षा दें।"
-    return "हल्की से मध्यम सिंचाई सुबह/शाम करें और खेत की वास्तविक नमी देखकर मात्रा तय करें।"
+def _is_gemini_key(value: str | None) -> bool:
+    text = (value or "").strip()
+    return text.startswith("AIza")
 
 
-def _format_fact_line(fact: RetrievedFact) -> str | None:
-    record = fact.content
-
-    if "advice" in record:
-        condition = str(record.get("condition", "मौसम स्थिति"))
-        advice = str(record.get("advice", ""))
-        if advice:
-            return f"{condition}: {advice}"
-
-    if "sowing_window" in record:
-        crop = str(record.get("crop", "फसल"))
-        sowing = str(record.get("sowing_window", ""))
-        harvest = str(record.get("harvest_window", ""))
-        tips = _to_text_list(record.get("tips"))
-        tip_text = f"; टिप: {tips[0]}" if tips else ""
-        return f"{crop}: बुवाई {sowing}, कटाई {harvest}{tip_text}".strip()
-
-    if "recommended_crops" in record:
-        season = str(record.get("season", ""))
-        region = str(record.get("region", ""))
-        crops = ", ".join(_to_text_list(record.get("recommended_crops")))
-        basis = str(record.get("basis", ""))
-        return f"{season} ({region}) के लिए उपयुक्त फसलें: {crops}; आधार: {basis}".strip()
-
-    if "guidance" in record:
-        crop = str(record.get("crop", "सामान्य"))
-        guidance = str(record.get("guidance", ""))
-        split = str(record.get("split_application", ""))
-        notes = _to_text_list(record.get("notes"))
-        note_text = f"; नोट: {notes[0]}" if notes else ""
-        return f"{crop}: {guidance}; {split}{note_text}".strip()
-
-    # Generic fallback for any unexpected KB record shape.
-    chunks: list[str] = []
-    for key, value in record.items():
-        values = ", ".join(_to_text_list(value)) if isinstance(value, list) else str(value)
-        if values.strip():
-            chunks.append(f"{key}: {values}")
-    if chunks:
-        return "; ".join(chunks[:3])
-    return None
+def _candidate_gemini_keys() -> list[str]:
+    # Try multiple Google keys if available to reduce 429 impact.
+    raw = [settings.google_api_key, settings.google_tts_api_key, settings.llm_api_key]
+    keys: list[str] = []
+    for item in raw:
+        value = (item or "").strip()
+        if not value or not _is_gemini_key(value):
+            continue
+        if value not in keys:
+            keys.append(value)
+    return keys
 
 
-def _generic_rule_lines(query_text: str, role: str) -> list[str]:
-    text = query_text.strip().lower()
+def _estimate_irrigation_mm(weather: dict) -> tuple[float, float]:
+    temp_c = float(weather.get("temperature_c", 0.0))
+    rain_mm = float(weather.get("precipitation_mm", 0.0))
 
-    irrigation_tokens = ["सिंचाई", "sinchai", "irrigation", "पानी", "water", "watering"]
-    fertilizer_tokens = ["खाद", "उर्वरक", "fertilizer", "npk", "यूरिया", "urea"]
-    crop_tokens = ["फसल", "crop", "बुवाई", "sowing", "कौन सी", "recommended"]
-
-    if _contains_any_token(text, irrigation_tokens):
-        return [
-            "मिट्टी की ऊपरी परत नहीं, बल्कि 5-7 सेमी गहराई की नमी देखकर सिंचाई करें।",
-            "सुबह/शाम सिंचाई करें और तेज धूप के समय पानी न दें।",
-            "एक साथ ज्यादा पानी देने के बजाय आवश्यकता अनुसार चरणों में सिंचाई करें।",
-        ]
-
-    if _contains_any_token(text, fertilizer_tokens):
-        return [
-            "खाद/उर्वरक की मात्रा मिट्टी जांच के आधार पर तय करना सबसे सुरक्षित रहता है।",
-            "नाइट्रोजन आधारित खाद को 2-3 किस्तों में देना अधिक प्रभावी होता है।",
-            "अत्यधिक यूरिया से फसल गिरने और लागत बढ़ने का जोखिम रहता है।",
-        ]
-
-    if _contains_any_token(text, crop_tokens):
-        return [
-            "फसल चयन में मौसम, पानी की उपलब्धता और स्थानीय बाजार मांग तीनों देखें।",
-            "अपने क्षेत्र के अनुकूल बीज/किस्म चुनें और समय पर बुवाई करें।",
-            "एक ही फसल पर निर्भर रहने के बजाय जोखिम कम करने हेतु विविधता रखें।",
-        ]
-
-    if role == "मजदूर":
-        return [
-            "काम से पहले सुरक्षा (दस्ताने/जूते/मास्क) का उपयोग करें।",
-            "दिन का काम मौसम और उपलब्ध उपकरण देखकर चरणों में प्लान करें।",
-            "अगर कार्य कृषि से जुड़ा है, तो खेत की नमी और मौसम के अनुसार समय तय करें।",
-        ]
-
-    if role == "छात्र":
-        return [
-            "उत्तर को स्थानीय उदाहरण से जोड़कर नोट्स बनाएं ताकि याद रखना आसान हो।",
-            "मौसम, मिट्टी और फसल स्टेज को साथ में देखकर निर्णय लेना सीखें।",
-            "एक छोटा field-observation checklist बनाकर उसी से अभ्यास करें।",
-        ]
-
-    return [
-        "निर्णय लेते समय मौसम, जमीन की स्थिति और उपलब्ध संसाधनों को साथ में देखें।",
-        "छोटे-छोटे कदमों में काम करें और हर चरण का परिणाम नोट करें।",
-        "जरूरत हो तो मैं आपकी स्थिति के हिसाब से और सटीक, चरणबद्ध योजना दे सकता हूँ।",
-    ]
+    if rain_mm >= 2.0:
+        return (0.0, 2.0)
+    if temp_c >= 34.0:
+        return (8.0, 10.0)
+    if temp_c <= 10.0:
+        return (2.0, 4.0)
+    return (5.0, 7.0)
 
 
-def _build_rule_based_fallback_answer(
+def _build_simple_fallback_answer(
     *,
     query_text: str,
-    profile_role: str,
-    profile_location: str,
     crop_preference: str,
+    profile_location: str,
+    land_size_acre: float,
     weather: dict | None,
-    weather_context: str,
-    retrieved_facts: list[RetrievedFact],
 ) -> str:
-    lines: list[str] = []
+    if weather is not None and _needs_today_weather_context(query_text):
+        temp_c = float(weather.get("temperature_c", 0.0))
+        rain_mm = float(weather.get("precipitation_mm", 0.0))
+        low_mm, high_mm = _estimate_irrigation_mm(weather)
+        liters_per_acre_low = low_mm * 4046.86
+        liters_per_acre_high = high_mm * 4046.86
+        total_low = liters_per_acre_low * max(land_size_acre, 1.0)
+        total_high = liters_per_acre_high * max(land_size_acre, 1.0)
+        return (
+            f"आज {profile_location} में तापमान {temp_c:.1f}°C और वर्षा {rain_mm:.1f} mm है।\n"
+            f"आज सिंचाई अनुमान: {low_mm:.0f}-{high_mm:.0f} mm।\n"
+            f"लगभग {liters_per_acre_low:.0f}-{liters_per_acre_high:.0f} लीटर/एकड़ पानी दें।\n"
+            f"कुल जमीन के लिए अनुमानित पानी: {total_low:.0f}-{total_high:.0f} लीटर।\n"
+            "सुबह या शाम सिंचाई करें और खेत की वास्तविक नमी देखकर अंतिम मात्रा तय करें।"
+        )
 
-    if weather_context:
-        lines.append(weather_context)
+    return _build_detailed_local_answer(
+        query_text=query_text,
+        crop_preference=crop_preference,
+    )
 
-    fact_lines = [line for line in (_format_fact_line(fact) for fact in retrieved_facts) if line]
-    if fact_lines:
-        for idx, fact_line in enumerate(fact_lines[:3], start=1):
-            lines.append(f"{idx}. {fact_line}")
-    else:
-        for idx, item in enumerate(_generic_rule_lines(query_text=query_text, role=profile_role), start=1):
-            lines.append(f"{idx}. {item}")
 
-    if weather is not None:
-        lines.append(f"मौसम-आधारित सावधानी: {_weather_rule_fallback(weather)}")
-    return "\n".join(lines)
+def _build_detailed_local_answer(query_text: str, crop_preference: str) -> str:
+    text = query_text.strip().lower()
+    crop = crop_preference or "फसल"
+
+    if _contains_any_token(text, ["फसल", "गेहूं", "खराब", "रोग", "कीट", "storage", "भंडारण"]):
+        return (
+            f"आपकी {crop} फसल को खराब होने से बचाने के लिए विस्तृत कार्ययोजना:\n"
+            "1. खेत में पानी का ठहराव न होने दें; निकास नालियां साफ रखें।\n"
+            "2. पत्तियों/बालियों की 2-3 दिन पर निगरानी करें; रोग/कीट के शुरुआती लक्षण तुरंत पहचानें।\n"
+            "3. रोगग्रस्त हिस्सों को अलग करें और खेत में संतुलित पोषण बनाए रखें।\n"
+            "4. सिंचाई सुबह/शाम करें और मिट्टी की नमी देखकर मात्रा तय करें।\n"
+            "5. कटाई सही नमी स्तर पर करें; बहुत देर से कटाई न करें।\n"
+            "6. कटाई के बाद दानों को अच्छी तरह सुखाकर ही भंडारण करें।\n"
+            "7. भंडारण स्थान सूखा, हवादार और कीट-मुक्त रखें; बोरी/बिन को साफ रखें।\n"
+            "8. हर सप्ताह भंडारित अनाज की जांच करें और नमी/कीट दिखते ही सुधारात्मक कदम लें।\n"
+            "अगला कदम: खेत की वर्तमान अवस्था (कटाई से पहले/बाद) बताएं, मैं stage-wise सटीक योजना दूंगा।"
+        )
+
+    return (
+        "विस्तृत उत्तर के लिए कृपया प्रश्न में फसल, स्थान, और समस्या (रोग/कीट/सिंचाई/खाद) स्पष्ट लिखें।\n"
+        "अगला कदम: उदाहरण के लिए पूछें - 'मेरी 2 एकड़ गेहूं में इस समय रोग से बचाव की पूरी योजना बताओ'।"
+    )
 
 
 def generate_advisory(db: Session, query_text: str) -> dict:
@@ -426,48 +423,55 @@ def generate_advisory(db: Session, query_text: str) -> dict:
         sources.append(str(weather.get("source", "weather")))
         mode = "gemini_with_weather_context"
 
-    boost_terms = [profile_location]
-    if profile.crop_preference:
-        boost_terms.append(profile.crop_preference)
-    retrieved_facts = retrieve_facts(query=query_text, top_k=3, boost_terms=boost_terms)
-    kb_sources = sorted({fact.source for fact in retrieved_facts})
     runtime_context = _build_runtime_context_text(profile_location=profile_location, weather=weather)
+    gemini_keys = _candidate_gemini_keys()
 
-    if not settings.enable_llm or not settings.llm_api_key:
-        answer = _build_rule_based_fallback_answer(
+    if not settings.enable_llm or not gemini_keys:
+        answer = _build_simple_fallback_answer(
             query_text=query_text,
-            profile_role=profile_role,
-            profile_location=profile_location,
             crop_preference=(profile.crop_preference or "").strip(),
+            profile_location=profile_location,
+            land_size_acre=profile.land_size_acre,
             weather=weather,
-            weather_context=weather_context,
-            retrieved_facts=retrieved_facts,
         )
-        mode = f"{mode}_fallback_no_llm"
-        sources.extend(["gemini_api_unavailable", "rule_based_fallback", *kb_sources])
+        mode = f"{mode}_fallback_no_gemini_key"
+        sources.extend(["gemini_api_unavailable", "simple_fallback"])
     else:
         llm_system_instruction = _build_system_instruction(
             has_weather_context=needs_weather,
             runtime_context=runtime_context,
         )
         llm_detailed = True
+        answer = ""
+        last_error: Exception | None = None
+
         try:
-            answer = generate_with_gemini(
-                api_key=settings.llm_api_key,
-                prompt=_build_llm_prompt(
-                    query_text=query_text,
-                    profile_context=profile_context,
-                    weather_context=weather_context,
-                    runtime_context=runtime_context,
-                ),
-                detailed=llm_detailed,
-                system_instruction=llm_system_instruction,
-            )
+            used_key = ""
+            for key in gemini_keys:
+                try:
+                    answer = generate_with_gemini(
+                        api_key=key,
+                        prompt=_build_llm_prompt(
+                            query_text=query_text,
+                            profile_context=profile_context,
+                            weather_context=weather_context,
+                            runtime_context=runtime_context,
+                        ),
+                        detailed=llm_detailed,
+                        system_instruction=llm_system_instruction,
+                    )
+                    used_key = key
+                    break
+                except Exception as exc:
+                    last_error = exc
+
+            if not answer:
+                raise RuntimeError(f"Gemini all keys failed: {last_error}")
 
             if _looks_incomplete_answer(answer):
                 try:
                     answer = generate_with_gemini(
-                        api_key=settings.llm_api_key,
+                        api_key=used_key,
                         prompt=_build_completion_prompt(
                             query_text=query_text,
                             profile_context=profile_context,
@@ -482,22 +486,46 @@ def generate_advisory(db: Session, query_text: str) -> dict:
                     # Keep first draft if completion pass fails.
                     pass
 
+            if _looks_too_brief(answer) or _looks_structurally_truncated(answer):
+                try:
+                    answer = generate_with_gemini(
+                        api_key=used_key,
+                        prompt=_build_expansion_prompt(
+                            query_text=query_text,
+                            profile_context=profile_context,
+                            weather_context=weather_context,
+                            runtime_context=runtime_context,
+                            short_answer=answer,
+                        ),
+                        detailed=True,
+                        system_instruction=llm_system_instruction,
+                    )
+                except Exception:
+                    # Keep earlier answer if expansion fails.
+                    pass
+
             if _looks_incomplete_answer(answer):
                 answer = f"{answer.rstrip()}।"
 
+            if _looks_too_brief(answer) or _looks_structurally_truncated(answer):
+                answer = _build_detailed_local_answer(
+                    query_text=query_text,
+                    crop_preference=(profile.crop_preference or "").strip(),
+                )
+                mode = f"{mode}_detail_guard"
+                sources.append("local_detail_guard")
+
             sources.append("gemini_api")
         except Exception:
-            answer = _build_rule_based_fallback_answer(
+            answer = _build_simple_fallback_answer(
                 query_text=query_text,
-                profile_role=profile_role,
-                profile_location=profile_location,
                 crop_preference=(profile.crop_preference or "").strip(),
+                profile_location=profile_location,
+                land_size_acre=profile.land_size_acre,
                 weather=weather,
-                weather_context=weather_context,
-                retrieved_facts=retrieved_facts,
             )
             mode = f"{mode}_fallback_after_gemini_error"
-            sources.extend(["gemini_api_error", "rule_based_fallback", *kb_sources])
+            sources.extend(["gemini_api_error", "simple_fallback"])
 
     log = ConversationLog(
         user_query=query_text,
