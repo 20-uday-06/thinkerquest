@@ -3,8 +3,20 @@ import time
 import httpx
 
 
-DEFAULT_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash"]
-DETAILED_GEMINI_MODELS = ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-2.0-flash"]
+DEFAULT_GEMINI_MODELS = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+]
+DETAILED_GEMINI_MODELS = [
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+]
 
 
 def _extract_text(payload: dict) -> str:
@@ -17,7 +29,12 @@ def _extract_text(payload: dict) -> str:
     return " ".join(chunk.strip() for chunk in text_chunks if chunk.strip()).strip()
 
 
-def _request_gemini(api_key: str, prompt: str, model: str) -> str:
+def _request_gemini(
+    api_key: str,
+    prompt: str,
+    model: str,
+    system_instruction: str | None = None,
+) -> str:
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         f"?key={api_key}"
@@ -33,6 +50,9 @@ def _request_gemini(api_key: str, prompt: str, model: str) -> str:
         },
     }
 
+    if system_instruction:
+        body["systemInstruction"] = {"parts": [{"text": system_instruction}]}
+
     with httpx.Client(timeout=20.0) as client:
         response = client.post(url, json=body)
         response.raise_for_status()
@@ -45,14 +65,24 @@ def _request_gemini(api_key: str, prompt: str, model: str) -> str:
     return text
 
 
-def generate_with_gemini(api_key: str, prompt: str, detailed: bool = False) -> str:
+def generate_with_gemini(
+    api_key: str,
+    prompt: str,
+    detailed: bool = False,
+    system_instruction: str | None = None,
+) -> str:
     last_error: Exception | None = None
     models = DETAILED_GEMINI_MODELS if detailed else DEFAULT_GEMINI_MODELS
 
     for model in models:
         for attempt in range(3):
             try:
-                return _request_gemini(api_key=api_key, prompt=prompt, model=model)
+                return _request_gemini(
+                    api_key=api_key,
+                    prompt=prompt,
+                    model=model,
+                    system_instruction=system_instruction,
+                )
             except httpx.HTTPStatusError as exc:
                 last_error = exc
                 status = exc.response.status_code

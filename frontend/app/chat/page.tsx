@@ -37,6 +37,14 @@ function speechLang(language: Language): string {
   return language === "en" ? "en-US" : "hi-IN";
 }
 
+function browserSpeechRate(language: Language): number {
+  return language === "en" ? 1.02 : 0.98;
+}
+
+function cloudAudioPlaybackRate(language: Language): number {
+  return language === "en" ? 1.04 : 1.08;
+}
+
 function sanitizeSpeechText(raw: string): string {
   return sanitizeAssistantText(raw)
     .replace(/\*\*/g, "")
@@ -260,7 +268,7 @@ function ChatContent() {
       const utterance = new SpeechSynthesisUtterance(sanitizeSpeechText(text));
       const lang = speechLang(language);
       utterance.lang = lang;
-      utterance.rate = language === "hi" ? 0.86 : 0.94;
+      utterance.rate = browserSpeechRate(language);
       utterance.pitch = 1;
 
       const voices = synth.getVoices();
@@ -310,6 +318,7 @@ function ChatContent() {
     try {
       const tts = await synthesizeSpeech(sanitizeSpeechText(text));
       const audio = new Audio(`data:${tts.mime_type};base64,${tts.audio_base64}`);
+      audio.playbackRate = cloudAudioPlaybackRate(language);
       audioRef.current = audio;
 
       audio.onended = () => {
