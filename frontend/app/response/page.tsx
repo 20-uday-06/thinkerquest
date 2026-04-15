@@ -27,7 +27,7 @@ function ResponseContent() {
             if ("speechSynthesis" in window) {
               const utterance = new SpeechSynthesisUtterance(response);
               utterance.lang = "hi-IN";
-              utterance.rate = 0.9;
+              utterance.rate = 1.0;
               window.speechSynthesis.cancel();
               window.speechSynthesis.speak(utterance);
             }

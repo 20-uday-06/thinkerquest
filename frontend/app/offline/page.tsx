@@ -138,7 +138,7 @@ export default function OfflineModePage() {
                                 const utterance =
                                   new SpeechSynthesisUtterance(t(faq.answerKey, language));
                                 utterance.lang = language === "hi" ? "hi-IN" : "en-US";
-                                utterance.rate = 0.9;
+                                utterance.rate = language === "hi" ? 1.0 : 1.04;
                                 window.speechSynthesis.cancel();
                                 window.speechSynthesis.speak(utterance);
                               }
@@ -208,7 +208,7 @@ export default function OfflineModePage() {
                                 const utterance =
                                   new SpeechSynthesisUtterance(t(faq.answerKey, language));
                                 utterance.lang = language === "hi" ? "hi-IN" : "en-US";
-                                utterance.rate = 0.9;
+                                utterance.rate = language === "hi" ? 1.0 : 1.04;
                                 window.speechSynthesis.cancel();
                                 window.speechSynthesis.speak(utterance);
                               }
