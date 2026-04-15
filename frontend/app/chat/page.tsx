@@ -456,42 +456,47 @@ function ChatContent() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col bg-gradient-to-b from-rural-cream via-rural-greenLight to-rural-cream">
+    <main className="min-h-screen w-full flex flex-col app-shell">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-rural-white shadow-soft p-4 border-b border-rural-greenLight">
-        <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-50 px-4 md:px-6 pt-4">
+        <div className="mx-auto max-w-5xl glass-panel rounded-2xl px-4 py-3 border border-rural-green/18 shadow-soft">
+          <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="text-2xl hover:opacity-70 transition-opacity"
+            className="h-9 w-9 rounded-full bg-rural-greenLight text-rural-greenDark flex items-center justify-center hover:bg-emerald-100 transition-colors"
           >
-            ←
+            <span className="text-xl">←</span>
           </Link>
           <div className="flex-1">
-            <h1 className="text-lg font-bold text-slate-900">{topic}</h1>
-            <p className="text-xs text-slate-500">{t("ai-assistant", language)}</p>
+            <h1 className="text-base md:text-lg font-semibold text-rural-greenDark truncate luxury-heading">{topic}</h1>
+            <p className="text-xs text-slate-600">{t("ai-assistant", language)}</p>
           </div>
-          <div className="text-2xl">🤖</div>
+          <div className="h-9 w-9 rounded-full hero-gradient text-white flex items-center justify-center">🤖</div>
+          </div>
         </div>
       </header>
 
       {/* Error banner */}
       {error && (
-        <div className="bg-red-50 border-b border-red-200 p-3 mx-4 mt-2 rounded-lg">
-          <p className="text-xs text-red-800">⚠️ {error}</p>
+        <div className="px-4 md:px-6 mt-3">
+          <div className="mx-auto max-w-5xl rounded-xl border border-rose-300/70 bg-rose-50 px-3 py-2.5">
+            <p className="text-xs text-rose-900">⚠️ {error}</p>
+          </div>
         </div>
       )}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-4 pb-36">
+        <div className="mx-auto max-w-5xl space-y-4">
         {messages.map((message) => (
           <div key={message.id} className="animate-slide-up">
             {message.status === "loading" && !message.isUser ? (
               <div className="flex justify-start">
-                <div className="max-w-[85%] md:max-w-[70%] rounded-2xl rounded-bl-none px-4 py-3 bg-[#ecfdf3] border border-[#bbf7d0] shadow-soft">
+                <div className="max-w-[86%] md:max-w-[70%] rounded-2xl rounded-bl-md px-4 py-3 bg-white/90 border border-emerald-200 shadow-soft">
                   <div className="space-y-2">
-                    <div className="h-2 rounded bg-green-200/80 animate-pulse w-48" />
-                    <div className="h-2 rounded bg-green-200/70 animate-pulse w-56" />
-                    <div className="h-2 rounded bg-green-200/60 animate-pulse w-40" />
+                    <div className="h-2 rounded bg-gradient-to-r from-emerald-100 via-emerald-200 to-emerald-100 bg-[length:200%_100%] animate-shimmer w-52" />
+                    <div className="h-2 rounded bg-gradient-to-r from-emerald-100 via-emerald-200 to-emerald-100 bg-[length:200%_100%] animate-shimmer w-64" />
+                    <div className="h-2 rounded bg-gradient-to-r from-emerald-100 via-emerald-200 to-emerald-100 bg-[length:200%_100%] animate-shimmer w-40" />
                   </div>
                 </div>
               </div>
@@ -511,7 +516,7 @@ function ChatContent() {
 
         {isLoading && (
           <div className="flex gap-2 justify-start animate-fade-in">
-            <div className="max-w-xs rounded-2xl px-4 py-3 bg-rural-greenLight rounded-bl-none">
+            <div className="max-w-xs rounded-2xl px-4 py-3 bg-white/88 border border-emerald-200 rounded-bl-md shadow-soft">
               <div className="flex gap-1">
                 <div className="w-2 h-2 bg-rural-greenDark rounded-full animate-bounce" />
                 <div
@@ -528,17 +533,19 @@ function ChatContent() {
         )}
 
         <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input area */}
-      <div className="sticky bottom-0 bg-rural-white border-t border-rural-greenLight p-4 shadow-soft-lg flex justify-center">
-        <div className="flex gap-2 items-end mb-3 w-full max-w-md">
+      <div className="fixed bottom-0 left-0 right-0 z-40 px-4 md:px-6 pb-4 pt-2 bg-gradient-to-t from-[#ecf3ee] via-[#ecf3ee]/95 to-transparent">
+        <div className="mx-auto max-w-5xl glass-panel rounded-2xl border border-rural-green/20 shadow-lux px-3 md:px-4 py-3">
+        <div className="flex gap-2 items-end w-full">
           <button
             onClick={handleVoiceInput}
-            className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center text-xl transition-all shadow-soft active:scale-95 ${
+            className={`flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center text-lg transition-all shadow-soft active:scale-95 ${
               isListening
-                ? "bg-red-500 hover:bg-red-600 text-white animate-pulse"
-                : "bg-rural-green hover:bg-rural-greenDark text-white"
+                ? "bg-rose-600 hover:bg-rose-700 text-white animate-pulse"
+                : "hero-gradient text-white hover:shadow-lux"
             }`}
             aria-label="माइक्रोफोन"
             title={isListening ? "Listening..." : "Click to speak"}
@@ -557,16 +564,17 @@ function ChatContent() {
             }}
             placeholder={t("ask-here", language)}
             disabled={isLoading}
-            className="flex-1 rounded-2xl border-2 border-rural-greenLight px-4 py-3 text-sm focus:outline-none focus:border-rural-green transition-colors bg-rural-cream disabled:opacity-60"
+            className="field-input flex-1 text-sm disabled:opacity-60"
           />
           <button
             onClick={() => void handleSendMessage()}
             disabled={!inputText.trim() || isLoading}
-            className="flex-shrink-0 w-12 h-12 rounded-full bg-rural-green text-white flex items-center justify-center text-xl hover:bg-rural-greenDark disabled:opacity-60 transition-all shadow-soft active:scale-95"
+            className="flex-shrink-0 w-11 h-11 rounded-full hero-gradient text-white flex items-center justify-center text-lg hover:shadow-lux disabled:opacity-60 transition-all shadow-soft active:scale-95"
             aria-label={t("send", language)}
           >
-            ✓
+            ➤
           </button>
+        </div>
         </div>
       </div>
 
@@ -598,7 +606,7 @@ function ChatContent() {
 
 export default function ChatPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-rural-cream flex items-center justify-center">लोड हो रहा है...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-rural-cream/70 flex items-center justify-center text-rural-greenDark">लोड हो रहा है...</div>}>
       <ChatContent />
     </Suspense>
   );

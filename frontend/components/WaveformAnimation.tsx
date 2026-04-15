@@ -8,10 +8,10 @@ export default function WaveformAnimation() {
       {[0, 1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="w-1 bg-rural-green rounded-full animate-bounce-subtle"
+          className="w-1.5 bg-gradient-to-t from-rural-greenDark to-rural-green rounded-full animate-bounce-subtle"
           style={{
             height: `${20 + i * 10}px`,
-            animationDelay: `${i * 0.1}s`,
+            animationDelay: `${i * 0.12}s`,
           }}
         />
       ))}

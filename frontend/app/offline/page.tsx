@@ -54,24 +54,24 @@ export default function OfflineModePage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col p-4 pb-safe bg-gradient-to-b from-rural-cream via-rural-yellow to-rural-cream safe-area">
+    <main className="min-h-screen w-full flex flex-col p-4 md:p-6 pb-safe app-shell safe-area">
       {/* Header */}
       <header className="mb-6">
         <div className="flex items-center gap-3 mb-4">
           <Link
             href="/"
-            className="text-2xl hover:opacity-70 transition-opacity"
+            className="h-9 w-9 rounded-full bg-rural-greenLight text-rural-greenDark flex items-center justify-center hover:bg-emerald-100 transition-colors"
           >
-            ←
+            <span className="text-xl">←</span>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">{t("offline-mode", language)}</h1>
-            <p className="text-sm text-slate-600">{t("offline-help", language)}</p>
+            <h1 className="text-2xl md:text-3xl luxury-heading text-rural-greenDark">{t("offline-mode", language)}</h1>
+            <p className="text-sm text-slate-700">{t("offline-help", language)}</p>
           </div>
         </div>
 
         {/* Warning banner */}
-        <Card className="bg-yellow-50 border-l-4 border-l-yellow-400">
+        <Card className="bg-amber-50 border border-amber-300/70">
           <div className="flex gap-2">
             <span className="text-xl">⚠️</span>
             <div>
@@ -89,7 +89,7 @@ export default function OfflineModePage() {
       {/* FAQ Categories */}
       <div className="space-y-4">
         {/* Farm FAQs */}
-        <Card key="farm" className="overflow-hidden">
+        <Card key="farm" className="overflow-hidden bg-white/88 border border-rural-green/20">
           <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <span>🌾</span>
             {t("farm-faqs", language)}
@@ -107,8 +107,8 @@ export default function OfflineModePage() {
                   onClick={() => setExpandedFAQ(isExpanded ? null : { category: "farm", itemId: faq.id })}
                   className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
                     isExpanded
-                      ? "bg-rural-greenLight border-2 border-rural-green"
-                      : "bg-rural-cream hover:bg-rural-greenLight border-2 border-transparent"
+                      ? "bg-rural-greenLight/80 border border-rural-green/35"
+                      : "bg-rural-cream/80 hover:bg-rural-greenLight/60 border border-transparent"
                   }`}
                 >
                   <div className="flex gap-3 items-start">
@@ -143,7 +143,7 @@ export default function OfflineModePage() {
                                 window.speechSynthesis.speak(utterance);
                               }
                             }}
-                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 flex items-center gap-1"
+                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 inline-flex items-center gap-1 rounded-full border border-rural-green/20 px-2 py-1"
                           >
                             <span>🔊</span>
                             <span>{t("listen", language)}</span>
@@ -159,7 +159,7 @@ export default function OfflineModePage() {
         </Card>
 
         {/* Health FAQs */}
-        <Card key="health" className="overflow-hidden">
+        <Card key="health" className="overflow-hidden bg-white/88 border border-rural-green/20">
           <h2 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
             <span>🏥</span>
             {t("health-faqs", language)}
@@ -177,8 +177,8 @@ export default function OfflineModePage() {
                   onClick={() => setExpandedFAQ(isExpanded ? null : { category: "health", itemId: faq.id })}
                   className={`w-full text-left p-4 rounded-xl transition-all duration-200 ${
                     isExpanded
-                      ? "bg-rural-greenLight border-2 border-rural-green"
-                      : "bg-rural-cream hover:bg-rural-greenLight border-2 border-transparent"
+                      ? "bg-rural-greenLight/80 border border-rural-green/35"
+                      : "bg-rural-cream/80 hover:bg-rural-greenLight/60 border border-transparent"
                   }`}
                 >
                   <div className="flex gap-3 items-start">
@@ -213,7 +213,7 @@ export default function OfflineModePage() {
                                 window.speechSynthesis.speak(utterance);
                               }
                             }}
-                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 flex items-center gap-1"
+                            className="mt-2 text-xs text-rural-greenDark hover:opacity-70 inline-flex items-center gap-1 rounded-full border border-rural-green/20 px-2 py-1"
                           >
                             <span>🔊</span>
                             <span>{t("listen", language)}</span>
@@ -230,8 +230,8 @@ export default function OfflineModePage() {
       </div>
 
       {/* Help text */}
-      <Card className="mt-8 bg-blue-50 border-l-4 border-l-blue-400">
-        <p className="text-sm text-blue-900 leading-6">
+      <Card className="mt-8 bg-rural-greenLight/65 border border-rural-green/25">
+        <p className="text-sm text-rural-greenDark leading-6">
           {t("offline-tip", language)}
         </p>
       </Card>

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import Button from "./Button";
+import React from "react";
 
 interface ChatBubbleProps {
   message: string;
@@ -32,18 +31,18 @@ export default function ChatBubble({
       }`}
     >
       <div
-        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-3 shadow-soft border ${
+        className={`max-w-[86%] md:max-w-[70%] rounded-2xl px-4 py-3.5 shadow-soft border ${
           isUser
-            ? "bg-[#166534] text-white border-[#14532d] rounded-br-none"
-            : "bg-[#ecfdf3] text-slate-900 border-[#bbf7d0] rounded-bl-none"
+            ? "bg-gradient-to-br from-rural-green to-rural-greenDark text-white border-emerald-900/25 rounded-br-md"
+            : "bg-white/92 text-slate-900 border-emerald-200 rounded-bl-md"
         }`}
       >
-        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{message}</p>
+        <p className="text-sm leading-7 whitespace-pre-wrap break-words">{message}</p>
 
         {!isUser && showSpeakButton && (onSpeak || onStop) && (
           <button
             onClick={isPlaying ? onStop : onSpeak}
-            className="mt-2 flex items-center gap-1 text-xs font-medium text-rural-greenDark hover:opacity-80"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rural-greenDark hover:opacity-80 rounded-full border border-rural-green/25 px-2.5 py-1"
             aria-label={isPlaying ? pauseText : playText}
           >
             <span>{isPlaying ? "⏸" : "▶"}</span>

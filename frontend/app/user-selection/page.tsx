@@ -49,45 +49,44 @@ export default function UserSelectionPage() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col p-6 bg-gradient-to-br from-rural-greenLight via-rural-cream to-rural-yellow">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <p className="text-sm text-slate-600 mb-2">{t("welcome", language)}</p>
-        <h1 className="text-2xl font-bold text-slate-900">{t("who-are-you", language)}</h1>
-      </div>
+    <main className="min-h-screen w-full px-5 py-8 app-shell">
+      <section className="mx-auto max-w-3xl">
+        <div className="hero-gradient rounded-[1.75rem] px-6 py-7 mb-5 border border-white/20 shadow-lux">
+          <p className="text-xs uppercase tracking-[0.11em] text-emerald-100/80 mb-2">{t("welcome", language)}</p>
+          <h1 className="text-3xl luxury-heading">{t("who-are-you", language)}</h1>
+        </div>
 
-      {/* Selection cards */}
-      <div className="flex-1 flex flex-col gap-4 max-w-md mx-auto w-full">
-        {USER_ROLES.map((role) => (
-          <SelectionCard
-            key={role.id}
-            icon={role.icon}
-            label={t(role.labelKey, language)}
-            description={t(role.descKey, language)}
-            isSelected={selectedRole === role.id}
-            onClick={() => handleSelect(role.id)}
-          />
-        ))}
-      </div>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+          {USER_ROLES.map((role) => (
+            <SelectionCard
+              key={role.id}
+              icon={role.icon}
+              label={t(role.labelKey, language)}
+              description={t(role.descKey, language)}
+              isSelected={selectedRole === role.id}
+              onClick={() => handleSelect(role.id)}
+            />
+          ))}
+        </div>
 
-      {/* Continue button */}
-      <div className="mt-8 max-w-md mx-auto w-full">
-        <Button
-          size="lg"
-          onClick={handleContinue}
-          disabled={!selectedRole}
-          className="w-full font-semibold"
-        >
-          {t("continue", language)}
-        </Button>
-        <button
-          type="button"
-          onClick={() => router.push("/landing")}
-          className="w-full mt-3 text-sm text-slate-600 hover:text-slate-900 font-semibold transition-colors"
-        >
-          {t("go-back", language)}
-        </button>
-      </div>
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 items-center">
+          <Button
+            size="lg"
+            onClick={handleContinue}
+            disabled={!selectedRole}
+            className="w-full"
+          >
+            {t("continue", language)}
+          </Button>
+          <button
+            type="button"
+            onClick={() => router.push("/landing")}
+            className="text-sm text-slate-700 hover:text-rural-greenDark font-semibold transition-colors px-2"
+          >
+            {t("go-back", language)}
+          </button>
+        </div>
+      </section>
     </main>
   );
 }

@@ -3,19 +3,22 @@
 @tailwind utilities;
 
 * {
+  box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Allow text selection only in specific areas */
-p, span, h1, h2, h3, h4, h5, h6, button, input, textarea {
-  -webkit-user-select: text;
-  user-select: text;
 }
 
 :root {
   color-scheme: light;
+  --ink-900: #10251b;
+  --ink-700: #244435;
+  --ink-500: #3c6250;
+  --surface-0: #fbfdfb;
+  --surface-1: #f4f7f2;
+  --surface-2: #e8f1eb;
+  --brand-700: #124f38;
+  --brand-600: #1f7a55;
+  --brand-500: #2c9d6f;
+  --line-soft: rgba(18, 79, 56, 0.16);
 }
 
 html {
@@ -25,11 +28,15 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif;
-  background: linear-gradient(135deg, #fef9f3 0%, #fef08a 100%);
+  font-family: var(--font-body), "Noto Sans Devanagari", sans-serif;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(44, 157, 111, 0.2), transparent 65%),
+    radial-gradient(900px 500px at 100% 10%, rgba(230, 215, 173, 0.33), transparent 60%),
+    linear-gradient(180deg, var(--surface-0) 0%, var(--surface-1) 55%, #edf3ee 100%);
   background-attachment: fixed;
-  color: #0f172a;
+  color: var(--ink-900);
   min-height: 100vh;
+  line-height: 1.45;
 }
 
 input,
@@ -60,21 +67,101 @@ input:-webkit-autofill:focus {
   }
 }
 
+.app-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-shell::before,
+.app-shell::after {
+  content: "";
+  position: fixed;
+  inset: auto;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.app-shell::before {
+  width: 22rem;
+  height: 22rem;
+  top: -8rem;
+  right: -6rem;
+  background: radial-gradient(circle at center, rgba(31, 122, 85, 0.22), transparent 70%);
+  filter: blur(4px);
+}
+
+.app-shell::after {
+  width: 20rem;
+  height: 20rem;
+  bottom: -8rem;
+  left: -5rem;
+  background: radial-gradient(circle at center, rgba(230, 215, 173, 0.35), transparent 68%);
+  filter: blur(8px);
+}
+
+.luxury-heading {
+  font-family: var(--font-display), "Noto Serif Devanagari", serif;
+  letter-spacing: 0.01em;
+}
+
+.glass-panel {
+  background: rgba(251, 253, 251, 0.78);
+  border: 1px solid var(--line-soft);
+  box-shadow: 0 18px 40px -20px rgba(16, 37, 27, 0.26);
+  backdrop-filter: blur(12px);
+}
+
+.field-input {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(31, 122, 85, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-900);
+  padding: 0.72rem 0.9rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: rgba(31, 122, 85, 0.65);
+  box-shadow: 0 0 0 4px rgba(44, 157, 111, 0.14);
+  background: #ffffff;
+}
+
+.field-input::placeholder {
+  color: #6b7f74;
+}
+
+.muted-label {
+  color: #486457;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.hero-gradient {
+  background:
+    linear-gradient(140deg, rgba(18, 79, 56, 0.95) 0%, rgba(31, 122, 85, 0.92) 55%, rgba(44, 157, 111, 0.88) 100%);
+  color: #f7fdf8;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #edf2ed;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #22c55e;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #2c9d6f, #1f7a55);
+  border-radius: 999px;
+  border: 2px solid #edf2ed;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #16a34a;
+  background: linear-gradient(180deg, #22875f, #185f44);
 }
 

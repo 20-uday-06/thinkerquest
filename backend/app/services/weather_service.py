@@ -82,11 +82,18 @@ def _fetch_live_weather(location: str) -> dict:
         payload = response.json()
 
     current = payload.get("current", {})
+    observed_at = str(current.get("time", "")).strip()
+    timezone_name = str(payload.get("timezone", "UTC"))
+
     return {
         "temperature_c": float(current.get("temperature_2m", 0.0)),
         "precipitation_mm": float(current.get("precipitation", 0.0)),
         "weather_code": int(current.get("weather_code", 0)),
         "source": "live_open_meteo",
+        "observed_at": observed_at,
+        "timezone": timezone_name,
+        "latitude": float(payload.get("latitude", lat)),
+        "longitude": float(payload.get("longitude", lon)),
     }
 
 
@@ -101,18 +108,29 @@ def get_weather_context(db: Session, location: str) -> dict:
                 "weather_code": cached.weather_code,
                 "source": cached.source,
                 "fresh": True,
+                "observed_at": live.get("observed_at")
+                or datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "timezone": str(live.get("timezone", "UTC")),
+                "latitude": live.get("latitude"),
+                "longitude": live.get("longitude"),
             }
         except Exception:
             pass
 
     cached = _read_cache(db, location)
     if cached is not None:
+        fresh = _is_fresh(cached)
+        cached_time = cached.updated_at
+        if cached_time.tzinfo is None:
+            cached_time = cached_time.replace(tzinfo=timezone.utc)
         return {
             "temperature_c": cached.temperature_c,
             "precipitation_mm": cached.precipitation_mm,
             "weather_code": cached.weather_code,
-            "source": "cached_weather",
-            "fresh": _is_fresh(cached),
+            "source": "cached_weather_fresh" if fresh else "cached_weather_stale",
+            "fresh": fresh,
+            "observed_at": cached_time.isoformat(timespec="seconds"),
+            "timezone": "UTC",
         }
 
     return {
@@ -121,4 +139,6 @@ def get_weather_context(db: Session, location: str) -> dict:
         "weather_code": 0,
         "source": "offline_default",
         "fresh": False,
+        "observed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "timezone": "UTC",
     }

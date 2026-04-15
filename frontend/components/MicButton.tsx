@@ -19,16 +19,21 @@ export default function MicButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="relative h-24 w-24 mx-auto"
+      className="relative h-28 w-28 mx-auto"
       aria-label="माइक्रोफोन शुरू करें"
     >
       {/* Outer pulsing ring */}
       {(isListening || isLoading) && (
         <div
-          className="absolute inset-0 rounded-full bg-rural-green opacity-20 animate-pulse-glow"
+          className="absolute inset-0 rounded-full bg-rural-green/30 animate-pulse-glow"
           aria-hidden
         />
       )}
+
+      <div
+        className="absolute inset-2 rounded-full border border-rural-green/20 bg-white/45 backdrop-blur-sm"
+        aria-hidden
+      />
 
       {/* Main button */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -37,8 +42,8 @@ export default function MicButton({
             disabled
               ? "bg-slate-300 cursor-not-allowed"
               : isListening
-                ? "bg-red-500 animate-pulse shadow-soft-lg"
-                : "bg-rural-green hover:bg-rural-greenDark shadow-soft-lg active:scale-95"
+                ? "bg-gradient-to-br from-rose-500 to-rose-700 animate-pulse shadow-lux"
+                : "bg-gradient-to-br from-rural-green to-rural-greenDark hover:shadow-lux-lg shadow-lux active:scale-[0.98]"
           }`}
         >
           {isLoading ? (
@@ -52,7 +57,7 @@ export default function MicButton({
       </div>
 
       {/* Status text below */}
-      <div className="absolute -bottom-12 left-0 right-0 text-center text-xs font-medium text-slate-600 whitespace-nowrap">
+      <div className="absolute -bottom-11 left-0 right-0 text-center text-xs font-semibold text-slate-700 whitespace-nowrap">
         {isListening
           ? "सुन रहे हैं..."
           : isLoading
