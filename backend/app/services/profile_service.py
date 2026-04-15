@@ -83,8 +83,8 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
                 location=payload.location,
                 field_of_study=payload.field,
                 interest_area=payload.interest,
-                crop_preference="शिक्षा",
-                land_size_acre=0.0,
+                crop_preference="सामान्य",
+                land_size_acre=1.0,
                 has_completed_onboarding=True,
             )
         elif payload.role == "मजदूर":  # Worker
@@ -95,8 +95,8 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
                 location=payload.location,
                 skill=payload.skill,
                 worker_location=payload.location,
-                crop_preference="कौशल",
-                land_size_acre=0.0,
+                crop_preference="सामान्य",
+                land_size_acre=1.0,
                 has_completed_onboarding=True,
             )
         else:
@@ -115,14 +115,28 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
             profile.farm_type = payload.crop
             profile.crop_preference = payload.crop or "अन्य"
             profile.land_size_acre = payload.land_size or profile.land_size_acre
+            profile.field_of_study = None
+            profile.interest_area = None
+            profile.skill = None
+            profile.worker_location = None
         elif payload.role == "छात्र":  # Student
+            profile.farm_type = None
             profile.field_of_study = payload.field
             profile.interest_area = payload.interest
-            profile.crop_preference = "शिक्षा"
+            profile.skill = None
+            profile.worker_location = None
+            profile.crop_preference = "सामान्य"
+            if profile.land_size_acre <= 0:
+                profile.land_size_acre = 1.0
         elif payload.role == "मजदूर":  # Worker
+            profile.farm_type = None
+            profile.field_of_study = None
+            profile.interest_area = None
             profile.skill = payload.skill
             profile.worker_location = payload.location
-            profile.crop_preference = "कौशल"
+            profile.crop_preference = "सामान्य"
+            if profile.land_size_acre <= 0:
+                profile.land_size_acre = 1.0
 
     db.commit()
     db.refresh(profile)

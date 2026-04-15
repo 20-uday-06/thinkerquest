@@ -8,7 +8,6 @@ import MicButton from "@/components/MicButton";
 import Badge from "@/components/Badge";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
-import { queryAdvisory } from "@/lib/api";
 
 export default function HomePage() {
   const router = useRouter();
@@ -92,7 +91,7 @@ export default function HomePage() {
         onerror: (event: any) => void;
         onend: () => void;
       };
-      recognition.lang = "hi-IN";
+      recognition.lang = language === "en" ? "en-US" : "hi-IN";
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
@@ -200,7 +199,7 @@ export default function HomePage() {
         <MicButton
           isListening={isListening}
           isLoading={isLoading}
-          disabled={!isOnline}
+          disabled={false}
           onClick={handleVoiceInput}
         />
       </div>

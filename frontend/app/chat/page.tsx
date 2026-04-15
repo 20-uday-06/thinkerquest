@@ -4,18 +4,48 @@ import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ChatBubble from "@/components/ChatBubble";
-import Button from "@/components/Button";
-import Card from "@/components/Card";
 import { queryAdvisory, synthesizeSpeech } from "@/lib/api";
+import { queueEvent } from "@/lib/offline-queue";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
-import type { AdvisoryResponse } from "@/lib/types";
+import type { Language } from "@/lib/AppContext";
 
 interface Message {
   id: string;
   text: string;
   isUser: boolean;
   timestamp: Date;
+  status?: "loading" | "streaming" | "done";
+  canSpeak?: boolean;
+}
+
+function sanitizeAssistantText(raw: string): string {
+  const normalized = raw.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+  if (!normalized) {
+    return "क्षमा करें, इस समय पूरा उत्तर उपलब्ध नहीं है। कृपया दोबारा पूछें।";
+  }
+
+  // Guard against visibly truncated markdown-like endings.
+  if (/\*\*\d+\.?$/.test(normalized) || /[:\-]$/.test(normalized)) {
+    return `${normalized}\n\nकृपया चाहें तो मैं जवाब आगे विस्तार से जारी रख सकता हूँ।`;
+  }
+
+  return normalized;
+}
+
+function speechLang(language: Language): string {
+  return language === "en" ? "en-US" : "hi-IN";
+}
+
+function sanitizeSpeechText(raw: string): string {
+  return sanitizeAssistantText(raw)
+    .replace(/\*\*/g, "")
+    .replace(/[`#>_]/g, " ")
+    .replace(/•/g, " ")
+    .replace(/\n+/g, ". ")
+    .replace(/\s{2,}/g, " ")
+    .replace(/(\d+)\)\s+/g, "$1. ")
+    .trim();
 }
 
 function ChatContent() {
@@ -27,12 +57,47 @@ function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [playingMessageId, setPlayingMessageId] = useState<string | null>(null);
   const [pausedMessageId, setPausedMessageId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const streamAssistantMessage = async (messageId: string, fullText: string) => {
+    const finalText = sanitizeAssistantText(fullText);
+    let index = 0;
+    const chunkSize = 3;
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === messageId ? { ...m, text: "", status: "streaming" } : m
+      )
+    );
+
+    await new Promise<void>((resolve) => {
+      const timer = setInterval(() => {
+        index = Math.min(index + chunkSize, finalText.length);
+        const next = finalText.slice(0, index);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId
+              ? {
+                  ...m,
+                  text: next,
+                  status: index >= finalText.length ? "done" : "streaming",
+                  canSpeak: index >= finalText.length,
+                }
+              : m
+          )
+        );
+
+        if (index >= finalText.length) {
+          clearInterval(timer);
+          resolve();
+        }
+      }, 16);
+    });
+  };
 
   useEffect(() => {
     // Add initial AI message
@@ -45,6 +110,7 @@ function ChatContent() {
       text: initialGreeting,
       isUser: false,
       timestamp: new Date(),
+      canSpeak: false,
     };
     setMessages([initialMessage]);
   }, [topic, language]);
@@ -69,38 +135,48 @@ function ChatContent() {
         text: normalizedTopic,
         isUser: true,
         timestamp: new Date(),
+        status: "done",
+        canSpeak: false,
       };
-      setMessages((prev) => [...prev, userMessage]);
+      const loadingId = `${Date.now()}-topic-ai-loading`;
+      const loadingMessage: Message = {
+        id: loadingId,
+        text: "",
+        isUser: false,
+        timestamp: new Date(),
+        status: "loading",
+        canSpeak: false,
+      };
+      setMessages((prev) => [...prev, userMessage, loadingMessage]);
 
       try {
         const response = await queryAdvisory(normalizedTopic);
         if (isCancelled) {
           return;
         }
-
-        const aiMessage: Message = {
-          id: `${Date.now()}-topic-ai`,
-          text: response.answer,
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, aiMessage]);
-        await speakResponse(response.answer, aiMessage.id);
+        await streamAssistantMessage(loadingId, response.answer);
+        await speakResponse(response.answer, loadingId);
       } catch (err) {
         if (isCancelled) {
           return;
         }
 
+        queueEvent("query_event", { text: normalizedTopic, source: "auto_topic" });
+
         const errorMessage = err instanceof Error ? err.message : t("error", language);
         setError(errorMessage);
 
-        const errorAiMessage: Message = {
-          id: `${Date.now()}-topic-err`,
-          text: `✗ ${errorMessage}\n\n${t("please-retry", language)}`,
-          isUser: false,
-          timestamp: new Date(),
-        };
-        setMessages((prev) => [...prev, errorAiMessage]);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === loadingId
+              ? {
+                  ...m,
+                  text: `✗ ${errorMessage}\n\n${t("please-retry", language)}`,
+                  status: "done",
+                }
+              : m
+          )
+        );
       } finally {
         if (!isCancelled) {
           setIsLoading(false);
@@ -128,9 +204,21 @@ function ChatContent() {
       text: inputText,
       isUser: true,
       timestamp: new Date(),
+      status: "done",
+      canSpeak: false,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const loadingId = `${Date.now()}-ai-loading`;
+    const loadingMessage: Message = {
+      id: loadingId,
+      text: "",
+      isUser: false,
+      timestamp: new Date(),
+      status: "loading",
+      canSpeak: false,
+    };
+
+    setMessages((prev) => [...prev, userMessage, loadingMessage]);
     setInputText("");
     setIsLoading(true);
     setError(null);
@@ -139,42 +227,72 @@ function ChatContent() {
       // Call the real API
       const response = await queryAdvisory(inputText);
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.answer,
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-
-      // Attempt text-to-speech
-      await speakResponse(response.answer, aiMessage.id);
+      await streamAssistantMessage(loadingId, response.answer);
+      await speakResponse(response.answer, loadingId);
     } catch (err) {
+      queueEvent("query_event", { text: inputText, source: "chat_input" });
+
       const errorMessage = err instanceof Error ? err.message : t("error", language);
       setError(errorMessage);
-
-      const errorAiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: `✗ ${errorMessage}\n\n${t("please-retry", language)}`,
-        isUser: false,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorAiMessage]);
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === loadingId
+            ? {
+                ...m,
+                text: `✗ ${errorMessage}\n\n${t("please-retry", language)}`,
+                status: "done",
+              }
+            : m
+        )
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const speakWithBrowser = (text: string) => {
+  const speakWithBrowser = (text: string, messageId: string): boolean => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      return;
+      return false;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === "hi" ? "hi-IN" : "en-US";
-    utterance.rate = 0.9;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
+    try {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(sanitizeSpeechText(text));
+      const lang = speechLang(language);
+      utterance.lang = lang;
+      utterance.rate = language === "hi" ? 0.86 : 0.94;
+      utterance.pitch = 1;
+
+      const voices = synth.getVoices();
+      const shortLang = lang.slice(0, 2).toLowerCase();
+      const preferred =
+        voices.find(
+          (voice) =>
+            voice.lang.toLowerCase().startsWith(shortLang) &&
+            /(google|neural|zira|ananya|female)/i.test(voice.name)
+        ) ?? voices.find((voice) => voice.lang.toLowerCase().startsWith(shortLang));
+
+      if (preferred) {
+        utterance.voice = preferred;
+      }
+
+      utterance.onend = () => {
+        setPlayingMessageId((current) => (current === messageId ? null : current));
+        setPausedMessageId((current) => (current === messageId ? null : current));
+      };
+
+      utterance.onerror = () => {
+        setPlayingMessageId((current) => (current === messageId ? null : current));
+        setPausedMessageId((current) => (current === messageId ? null : current));
+      };
+
+      audioRef.current = null;
+      synth.cancel();
+      synth.speak(utterance);
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const speakResponse = async (text: string, messageId: string) => {
@@ -185,8 +303,12 @@ function ChatContent() {
     setPlayingMessageId(messageId);
     setPausedMessageId(null);
 
+    if (speakWithBrowser(text, messageId)) {
+      return;
+    }
+
     try {
-      const tts = await synthesizeSpeech(text);
+      const tts = await synthesizeSpeech(sanitizeSpeechText(text));
       const audio = new Audio(`data:${tts.mime_type};base64,${tts.audio_base64}`);
       audioRef.current = audio;
 
@@ -197,30 +319,46 @@ function ChatContent() {
 
       await audio.play();
     } catch {
-      // Fallback to browser TTS if API fails
-      speakWithBrowser(text);
-      setPlayingMessageId(null);
-      setPausedMessageId(null);
+      // Fallback to browser TTS if API path fails.
+      if (!speakWithBrowser(text, messageId)) {
+        setPlayingMessageId(null);
+        setPausedMessageId(null);
+      }
     }
   };
 
   const stopSpeaking = () => {
-    if (audioRef.current && playingMessageId) {
-      audioRef.current.pause();
-      setPausedMessageId(playingMessageId);
-      setPlayingMessageId(null);
+    if (!playingMessageId) {
+      return;
     }
-    window.speechSynthesis?.pause?.();
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+    } else {
+      window.speechSynthesis?.pause?.();
+    }
+
+    setPausedMessageId(playingMessageId);
+    setPlayingMessageId(null);
   };
 
   const resumeSpeaking = () => {
-    if (audioRef.current && pausedMessageId) {
-      setPlayingMessageId(pausedMessageId);
-      setPausedMessageId(null);
-      audioRef.current.play();
-    } else {
-      window.speechSynthesis?.resume?.();
+    if (!pausedMessageId) {
+      return;
     }
+
+    const resumeId = pausedMessageId;
+    setPlayingMessageId(resumeId);
+    setPausedMessageId(null);
+
+    if (audioRef.current) {
+      void audioRef.current.play().catch(() => {
+        setPlayingMessageId(null);
+      });
+      return;
+    }
+
+    window.speechSynthesis?.resume?.();
   };
 
   const handleSpeak = (text: string, messageId: string) => {
@@ -273,7 +411,7 @@ function ChatContent() {
         onerror: (event: any) => void;
         onend: () => void;
       };
-      recognition.lang = "hi-IN";
+      recognition.lang = speechLang(language);
       recognition.interimResults = false;
       recognition.maxAlternatives = 1;
 
@@ -335,18 +473,30 @@ function ChatContent() {
       )}
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 md:p-5 space-y-4">
         {messages.map((message) => (
           <div key={message.id} className="animate-slide-up">
-            <ChatBubble
-              message={message.text}
-              isUser={message.isUser}
-              showSpeakButton={!message.isUser && !message.text.includes("नमस्ते") && !message.text.includes("Hello")}
-              onSpeak={() => !message.isUser && handleSpeak(message.text, message.id)}
-              onStop={stopSpeaking}
-              isPlaying={playingMessageId === message.id}
-              language={language}
-            />
+            {message.status === "loading" && !message.isUser ? (
+              <div className="flex justify-start">
+                <div className="max-w-[85%] md:max-w-[70%] rounded-2xl rounded-bl-none px-4 py-3 bg-[#ecfdf3] border border-[#bbf7d0] shadow-soft">
+                  <div className="space-y-2">
+                    <div className="h-2 rounded bg-green-200/80 animate-pulse w-48" />
+                    <div className="h-2 rounded bg-green-200/70 animate-pulse w-56" />
+                    <div className="h-2 rounded bg-green-200/60 animate-pulse w-40" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ChatBubble
+                message={message.text}
+                isUser={message.isUser}
+                showSpeakButton={!message.isUser && message.canSpeak !== false && message.status !== "streaming"}
+                onSpeak={() => !message.isUser && handleSpeak(message.text, message.id)}
+                onStop={stopSpeaking}
+                isPlaying={playingMessageId === message.id}
+                language={language}
+              />
+            )}
           </div>
         ))}
 

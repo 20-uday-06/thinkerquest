@@ -32,13 +32,13 @@ export default function ChatBubble({
       }`}
     >
       <div
-        className={`max-w-xs rounded-2xl px-4 py-3 ${
+        className={`max-w-[85%] md:max-w-[70%] rounded-2xl px-4 py-3 shadow-soft border ${
           isUser
-            ? "bg-rural-green text-white rounded-br-none"
-            : "bg-rural-greenLight text-slate-900 rounded-bl-none"
+            ? "bg-[#166534] text-white border-[#14532d] rounded-br-none"
+            : "bg-[#ecfdf3] text-slate-900 border-[#bbf7d0] rounded-bl-none"
         }`}
       >
-        <p className="text-sm leading-6">{message}</p>
+        <p className="text-sm leading-6 whitespace-pre-wrap break-words">{message}</p>
 
         {!isUser && showSpeakButton && (onSpeak || onStop) && (
           <button

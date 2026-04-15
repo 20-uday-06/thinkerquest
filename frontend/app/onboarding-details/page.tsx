@@ -9,6 +9,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
 import { completeOnboarding } from "@/lib/api";
+import { queueEvent } from "@/lib/offline-queue";
 
 export default function OnboardingDetailsPage() {
   const router = useRouter();
@@ -134,8 +135,22 @@ export default function OnboardingDetailsPage() {
       router.push("/");
     } catch (err) {
       console.error("❌ Error:", err);
+      queueEvent("profile_update", {
+        name: formData.name.trim(),
+        phone_number: formData.phone_number.trim(),
+        role: userRole,
+        has_completed_onboarding: true,
+        location: formData.location.trim(),
+        land_size_acre: userRole === "किसान" ? parseFloat(formData.landSize) || 1.0 : 1.0,
+        crop_preference: userRole === "किसान" ? formData.crop.trim() || "सामान्य" : "सामान्य",
+        field_of_study: userRole === "छात्र" ? formData.field.trim() : undefined,
+        interest_area: userRole === "छात्र" ? formData.interest.trim() : undefined,
+        skill: userRole === "मजदूर" ? formData.skill.trim() : undefined,
+        worker_location: userRole === "मजदूर" ? formData.location.trim() : undefined,
+      });
+
       const errorMsg = err instanceof Error ? err.message : t("error", language);
-      setError(errorMsg);
+      setError(`${errorMsg}. प्रोफ़ाइल ऑफलाइन कतार में सहेजी गई है और इंटरनेट आने पर सिंक होगी।`);
     } finally {
       setIsLoading(false);
     }

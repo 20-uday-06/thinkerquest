@@ -12,48 +12,110 @@ from app.services.weather_service import get_weather_context
 settings = get_settings()
 
 
-def _simple_rule_reply(query_text: str, location: str, crop: str) -> tuple[str, list[str]]:
-    text = query_text.strip().lower()
+def _normalize_role(role: str | None) -> str:
+    value = (role or "").strip()
+    return value if value in {"किसान", "छात्र", "मजदूर"} else "किसान"
 
-    if any(token in text for token in ["hello", "hi", "नमस्ते", "सुन", "आवाज", "आवाज़", "voice"]):
+
+def _is_agri_query(text: str) -> bool:
+    agri_tokens = [
+        "फसल",
+        "बुवाई",
+        "खाद",
+        "मौसम",
+        "सिंचाई",
+        "पैदावार",
+        "पानी",
+        "crop",
+        "sowing",
+        "fertilizer",
+        "fertiliser",
+        "weather",
+        "irrigation",
+        "yield",
+        "fasal",
+        "buwai",
+        "bowai",
+        "khad",
+        "khaad",
+        "mausam",
+        "sinchai",
+        "pani",
+        "paani",
+        "paidavar",
+        "barish",
+        "rain",
+    ]
+    return any(token in text for token in agri_tokens)
+
+
+def _simple_rule_reply(query_text: str, location: str, crop: str, role: str) -> tuple[str, list[str]]:
+    text = query_text.strip().lower()
+    normalized_role = _normalize_role(role)
+
+    if any(token in text for token in ["स्वास्थ्य", "health", "बुखार", "दवाई", "डॉक्टर", "swasthya", "bukhar", "doctor", "medicine"]):
         return (
-            "हाँ, आपकी आवाज सुन पा रहा हूँ। खेती से जुड़ा सवाल पूछें, जैसे बुवाई, सिंचाई, खाद या मौसम सलाह।",
+            "अगर तेज बुखार, सांस में दिक्कत, छाती दर्द, या लगातार कमजोरी हो तो तुरंत नजदीकी स्वास्थ्य केंद्र जाएं। हल्की समस्या में साफ पानी, संतुलित भोजन, और आराम रखें।",
+            ["health_general"],
+        )
+
+    if any(token in text for token in ["योजना", "scheme", "सरकारी", "सब्सिडी", "लाभ", "yojana", "sarkari", "subsidy", "labh"]):
+        return (
+            "सरकारी योजना के लिए अपना आधार, बैंक खाता, और मोबाइल नंबर तैयार रखें। नजदीकी CSC/जन सेवा केंद्र या संबंधित विभाग में आवेदन स्थिति जांचें और रसीद सुरक्षित रखें।",
+            ["gov_scheme_general"],
+        )
+
+    if normalized_role == "छात्र" and any(token in text for token in ["पढ़ाई", "education", "skill", "स्किल", "कोर्स", "career", "रोजगार", "नौकरी", "padhai", "course", "naukri", "job"]):
+        return (
+            "अपने लक्ष्य के अनुसार 1 मुख्य कौशल चुनें, रोज 60-90 मिनट अभ्यास करें, और हर सप्ताह छोटा प्रोजेक्ट बनाएं। पास के कॉलेज/स्किल सेंटर और सरकारी स्कॉलरशिप/स्किल योजनाएं जरूर देखें।",
+            ["student_guidance"],
+        )
+
+    if normalized_role == "मजदूर" and any(token in text for token in ["काम", "job", "मजदूरी", "सुरक्षा", "contract", "salary", "majdoori", "kam", "suraksha", "payment"]):
+        return (
+            "काम शुरू करने से पहले मजदूरी दर, कार्य घंटे, और भुगतान तारीख लिखित में तय करें। सुरक्षा उपकरण (दस्ताने/जूते/हेलमेट) मांगें और भुगतान का रिकॉर्ड रखें।",
+            ["worker_guidance"],
+        )
+
+    if any(token in text for token in ["hello", "hi", "नमस्ते", "सुन", "आवाज", "आवाज़", "voice", "namaste", "awaz"]):
+        return (
+            "हाँ, आपकी आवाज सुन पा रहा हूँ। आप खेती, स्वास्थ्य, शिक्षा/कौशल या सरकारी योजना से जुड़ा सवाल पूछ सकते हैं।",
             ["assistant_greeting"],
         )
 
-    if "बुवाई" in text or "sowing" in text:
+    if any(token in text for token in ["बुवाई", "sowing", "buwai", "bowai"]):
         return (
             f"{location} में {crop} की बुवाई आमतौर पर अक्टूबर से नवंबर के बीच करें। मिट्टी में नमी हो तो अंकुरण अच्छा होगा।",
             ["crop_calendar_uttarakhand.json"],
         )
-    if "खाद" in text or "fertilizer" in text:
+    if any(token in text for token in ["खाद", "fertilizer", "fertiliser", "khad", "khaad"]):
         return (
             f"{crop} के लिए नाइट्रोजन, फॉस्फोरस और पोटाश संतुलित मात्रा में दें। अपनी ज़मीन की जांच रिपोर्ट हो तो उसी के अनुसार मात्रा तय करें।",
             ["fertilizer_basics_north_india.json"],
         )
-    if "मौसम" in text or "weather" in text:
+    if any(token in text for token in ["मौसम", "weather", "mausam", "barish", "rain"]):
         return (
             f"अगर अगले 24 घंटों में बारिश की संभावना हो तो सिंचाई टालें। {location} के लिए खेत में नमी देखकर ही पानी दें।",
             ["weather_rules_general.json"],
         )
-    if "सिंचाई" in text or "irrigation" in text or "पानी" in text:
+    if any(token in text for token in ["सिंचाई", "irrigation", "पानी", "water", "sinchai", "pani", "paani"]):
         return (
             f"{crop} में सिंचाई मिट्टी की नमी और मौसम देखकर करें। पहली सिंचाई क्रिटिकल स्टेज पर करें और पानी भराव से बचें।",
             ["weather_rules_general.json"],
         )
-    if "पैदावार" in text or "yield" in text:
+    if any(token in text for token in ["पैदावार", "yield", "paidavar", "production"]):
         return (
             f"{crop} की पैदावार बढ़ाने के लिए समय पर बुवाई, संतुलित खाद, खरपतवार नियंत्रण और सही सिंचाई शेड्यूल अपनाएं।",
             ["crop_calendar_uttarakhand.json", "fertilizer_basics_north_india.json"],
         )
-    if "फसल" in text or "crop" in text:
+    if any(token in text for token in ["फसल", "crop", "fasal"]):
         return (
             f"{location} और आपकी पसंद {crop} को देखते हुए अभी रबी सीजन की तैयारी रखें। खेत की जुताई और बीज उपचार पहले करें।",
             ["crop_selection_north_india.json"],
         )
 
     return (
-        "कृपया फसल, बुवाई, खाद या मौसम से जुड़ा सवाल पूछें। मैं आसान कृषि सलाह दूंगा।",
+        "कृपया खेती, स्वास्थ्य, शिक्षा/कौशल, या सरकारी योजना से जुड़ा सवाल पूछें। मैं सरल और काम की सलाह दूंगा।",
         ["domain_guardrail"],
     )
 
@@ -122,6 +184,7 @@ def _needs_detailed_answer(query_text: str) -> bool:
 
 def _build_llm_prompt(
     query_text: str,
+    profile_role: str,
     profile_location: str,
     profile_land_size: float,
     profile_crop: str,
@@ -140,12 +203,13 @@ def _build_llm_prompt(
     )
 
     return (
-        "आप ग्रामीण भारत के लिए हिंदी-प्रथम कृषि सहायक हैं। "
+        "आप ग्रामीण भारत के लिए हिंदी-प्रथम बहु-क्षेत्रीय सहायक हैं। "
         "हमेशा स्पष्ट, सरल और क्रियात्मक सलाह दें। "
         f"{length_instruction} "
-        "अगर सवाल खेती से बाहर हो, तो विनम्रता से बताएं कि आप खेती, मौसम, बुवाई, खाद, सिंचाई में मदद करते हैं और उपयोगकर्ता को खेती-संबंधित प्रश्न पूछने के लिए प्रेरित करें।\n\n"
+        "आप खेती, स्वास्थ्य, शिक्षा/कौशल, और सरकारी योजना में मदद करते हैं।"
+        "अगर सवाल इन क्षेत्रों से बाहर हो, तो विनम्रता से प्रासंगिक क्षेत्र का प्रश्न पूछने के लिए प्रेरित करें।\n\n"
         f"उपयोगकर्ता प्रश्न: {query_text}\n"
-        f"प्रोफाइल - स्थान: {profile_location}, जमीन: {profile_land_size} एकड़, पसंदीदा फसल: {profile_crop}\n"
+        f"प्रोफाइल - भूमिका: {profile_role}, स्थान: {profile_location}, जमीन: {profile_land_size} एकड़, पसंदीदा फसल: {profile_crop}\n"
         f"नियम-आधारित संदर्भ: {base_answer}\n"
         f"नॉलेज-बेस संदर्भ: {retrieval_context}\n"
         f"मौसम संदर्भ: {weather_line}\n\n"
@@ -171,6 +235,10 @@ def _is_poor_detailed_answer(text: str) -> bool:
     if "at the beginning" in cleaned or "emphasize" in cleaned:
         return True
     if cleaned.count("*") >= 3:
+        return True
+    if cleaned.endswith("**1.") or cleaned.endswith("**1"):
+        return True
+    if cleaned.endswith(":"):
         return True
     return False
 
@@ -219,33 +287,47 @@ def _build_detailed_fallback_answer(
 
 def generate_advisory(db: Session, query_text: str) -> dict:
     profile = get_or_create_profile(db)
+    profile_role = _normalize_role(profile.role)
     weather = get_weather_context(db=db, location=profile.location)
     weather_tokens = ["बारिश" if weather.get("precipitation_mm", 0.0) > 0 else "शुष्क"]
+    advisory_crop = (profile.crop_preference or "").strip() or "सामान्य"
+    if advisory_crop in {"शिक्षा", "कौशल"}:
+        advisory_crop = "सामान्य"
+    agri_query = _is_agri_query(query_text.strip().lower())
 
     base_answer, sources = _simple_rule_reply(
         query_text=query_text,
         location=profile.location,
-        crop=profile.crop_preference,
+        crop=advisory_crop,
+        role=profile_role,
     )
 
-    retrieval_summary, retrieval_sources = _build_retrieval_summary(
-        query_text=query_text,
-        crop=profile.crop_preference,
-        location=profile.location,
-        weather_tokens=weather_tokens,
-    )
+    retrieval_summary = ""
+    retrieval_sources: list[str] = []
+    if agri_query:
+        retrieval_summary, retrieval_sources = _build_retrieval_summary(
+            query_text=query_text,
+            crop=advisory_crop,
+            location=profile.location,
+            weather_tokens=weather_tokens,
+        )
 
     weather_line = _build_weather_advice(weather)
+    profile_context = f"आपका स्थान: {profile.location}"
+    if profile_role == "किसान":
+        profile_context += f", जमीन: {profile.land_size_acre} एकड़, पसंदीदा फसल: {advisory_crop}"
+    else:
+        profile_context += f", भूमिका: {profile_role}"
 
     if retrieval_summary:
         fallback_answer = (
-            f"आपका स्थान: {profile.location}, जमीन: {profile.land_size_acre} एकड़, पसंदीदा फसल: {profile.crop_preference}। "
+            f"{profile_context}। "
             f"{base_answer} {retrieval_summary} मौसम स्थिति: {weather_line}"
         )
         sources = sorted(set(sources + retrieval_sources + [str(weather.get("source", "weather"))]))
     else:
         fallback_answer = (
-            f"आपका स्थान: {profile.location}, जमीन: {profile.land_size_acre} एकड़, पसंदीदा फसल: {profile.crop_preference}। "
+            f"{profile_context}। "
             f"{base_answer} मौसम स्थिति: {weather_line}"
         )
         sources = sorted(set(sources + [str(weather.get("source", "weather"))]))
@@ -254,12 +336,15 @@ def generate_advisory(db: Session, query_text: str) -> dict:
     mode = "hybrid_rule_retrieval"
     detailed = _needs_detailed_answer(query_text)
 
-    if settings.enable_llm and settings.llm_api_key:
+    use_llm = settings.enable_llm and settings.llm_api_key and agri_query
+
+    if use_llm:
         llm_prompt = _build_llm_prompt(
             query_text=query_text,
+            profile_role=profile_role,
             profile_location=profile.location,
             profile_land_size=profile.land_size_acre,
-            profile_crop=profile.crop_preference,
+            profile_crop=advisory_crop,
             base_answer=base_answer,
             retrieval_summary=retrieval_summary,
             weather_line=weather_line,
@@ -286,8 +371,23 @@ def generate_advisory(db: Session, query_text: str) -> dict:
                     if not _is_poor_detailed_answer(answer):
                         break
 
-            mode = "hybrid_llm_gemini"
-            sources = sorted(set(sources + ["gemini_api"]))
+                if _is_poor_detailed_answer(answer):
+                    mode = "hybrid_rule_retrieval_fallback"
+                    answer = _build_detailed_fallback_answer(
+                        query_text=query_text,
+                        location=profile.location,
+                        land_size_acre=profile.land_size_acre,
+                        crop=advisory_crop,
+                        base_answer=base_answer,
+                        retrieval_summary=retrieval_summary,
+                        weather_line=weather_line,
+                    )
+                else:
+                    mode = "hybrid_llm_gemini"
+                    sources = sorted(set(sources + ["gemini_api"]))
+            else:
+                mode = "hybrid_llm_gemini"
+                sources = sorted(set(sources + ["gemini_api"]))
         except Exception:
             mode = "hybrid_rule_retrieval_fallback"
             if detailed:
@@ -295,7 +395,7 @@ def generate_advisory(db: Session, query_text: str) -> dict:
                     query_text=query_text,
                     location=profile.location,
                     land_size_acre=profile.land_size_acre,
-                    crop=profile.crop_preference,
+                    crop=advisory_crop,
                     base_answer=base_answer,
                     retrieval_summary=retrieval_summary,
                     weather_line=weather_line,

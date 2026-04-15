@@ -10,6 +10,7 @@ import LanguageToggle from "@/components/LanguageToggle";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
 import { getProfile, updateProfile } from "@/lib/api";
+import { queueEvent } from "@/lib/offline-queue";
 import type { UserProfile } from "@/lib/types";
 
 export default function ProfilePage() {
@@ -143,9 +144,24 @@ export default function ProfilePage() {
         setStatus("");
       }, 2000);
     } catch (err) {
+      queueEvent("profile_update", {
+        name: formData.name.trim() || undefined,
+        phone_number: formData.phone_number.trim() || undefined,
+        role: formData.role || userRole,
+        has_completed_onboarding: true,
+        location: formData.location.trim(),
+        land_size_acre: landValue,
+        crop_preference: formData.crop_preference.trim(),
+        farm_type: formData.farm_type || undefined,
+        field_of_study: formData.field_of_study || undefined,
+        interest_area: formData.interest_area || undefined,
+        skill: formData.skill || undefined,
+        worker_location: formData.worker_location || undefined,
+      });
+
       const errorMsg = err instanceof Error ? err.message : "प्रोफ़ाइल अपडेट करने में त्रुटि";
-      setError(errorMsg);
-      setStatus(errorMsg);
+      setError(`${errorMsg} (ऑफलाइन कतार में सहेजा गया)`);
+      setStatus("इंटरनेट आने पर प्रोफ़ाइल अपने आप सिंक हो जाएगी");
     } finally {
       setIsSaving(false);
     }
