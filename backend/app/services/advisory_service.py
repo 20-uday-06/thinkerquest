@@ -49,6 +49,7 @@ def _is_agri_query(text: str) -> bool:
         "fertiliser",
         "weather",
         "irrigation",
+        "irrigigation",
         "yield",
         "fasal",
         "buwai",
@@ -62,21 +63,307 @@ def _is_agri_query(text: str) -> bool:
         "paidavar",
         "barish",
         "rain",
+        "npk",
+        "n-p-k",
+        "n p k",
+        "एनपीके",
+        "kvk",
+        "k.v.k",
+        "कृषि विज्ञान केंद्र",
+        "urea",
+        "dap",
+        "potash",
+        "nitrogen",
+        "phosphorus",
+        "potassium",
+        "nutrient",
+        "dosage",
+        "dose",
+        "soil test",
+        "soil testing",
+        "ph",
+        "grow",
+        "growing",
+        "growth",
+        "not growing",
+        "ग्रोइंग",
+        "ग्रोथ",
+        "पौधा",
+        "plant",
+        "stunted",
+        "yellow leaf",
+        "पीला",
+        "कम बढ़",
     ]
     return _contains_any_token(text, agri_tokens)
+
+
+def _is_irrigation_quantity_query(text: str) -> bool:
+    irrigation_tokens = [
+        "सिंचाई",
+        "पानी",
+        "water",
+        "irrigation",
+        "irrigigation",
+        "sinchai",
+        "pani",
+        "paani",
+    ]
+    quantity_tokens = [
+        "मात्रा",
+        "कितना",
+        "कितनी",
+        "liter",
+        "litre",
+        "लीटर",
+        "mm",
+        "मिमी",
+        "qty",
+        "quantity",
+        "kitna",
+        "kitni",
+        "how much",
+        "liters",
+        "ltr",
+    ]
+    weather_tokens = [
+        "आज",
+        "today",
+        "todays",
+        "aaj",
+        "मौसम",
+        "weather",
+        "mausam",
+        "बारिश",
+        "barish",
+        "rain",
+    ]
+    return _contains_any_token(text, irrigation_tokens) and (
+        _contains_any_token(text, quantity_tokens)
+        or _contains_any_token(text, weather_tokens)
+    )
+
+
+def _is_current_weather_query(text: str) -> bool:
+    weather_tokens = [
+        "मौसम",
+        "weather",
+        "mausam",
+        "तापमान",
+        "temperature",
+        "temp",
+        "humidity",
+        "rainfall",
+        "बारिश",
+        "barish",
+        "rain",
+    ]
+    current_tokens = [
+        "आज",
+        "आज का",
+        "today",
+        "todays",
+        "aaj",
+        "current",
+        "abhi",
+        "अभी",
+        "now",
+        "right now",
+    ]
+    return _contains_any_token(text, weather_tokens) and _contains_any_token(text, current_tokens)
+
+
+def _is_crop_growth_issue_query(text: str) -> bool:
+    growth_tokens = [
+        "grow",
+        "growing",
+        "growth",
+        "not growing",
+        "growing well",
+        "ग्रोइंग",
+        "ग्रोथ",
+        "नॉट ग्रोइंग",
+        "बढ़ नहीं",
+        "नहीं बढ़",
+        "stunted",
+        "weak plant",
+        "yellow leaf",
+        "पीला",
+        "प्रॉब्लम",
+        "problem",
+    ]
+    non_agri_growth_tokens = [
+        "career",
+        "job growth",
+        "business growth",
+        "study",
+        "education",
+        "skill",
+        "salary",
+        "promotion",
+        "mental health",
+    ]
+    if _contains_any_token(text, non_agri_growth_tokens):
+        return False
+
+    return _contains_any_token(text, growth_tokens)
+
+
+def _build_term_explanation_answer(query_text: str) -> tuple[str, list[str]] | None:
+    text = query_text.strip().lower()
+    has_npk = _contains_any_token(text, ["npk", "n-p-k", "n p k", "n.p.k", "एनपीके"])
+    has_kvk = _contains_any_token(text, ["kvk", "k.v.k", "कृषि विज्ञान केंद्र"])
+
+    if not has_npk and not has_kvk:
+        return None
+
+    lines: list[str] = []
+    if has_npk:
+        lines.append(
+            "NPK का मतलब Nitrogen (N), Phosphorus (P), Potassium (K) है। N पत्तियों/वृद्धि के लिए, P जड़ और फूल-फल के लिए, K पौधे की मजबूती और रोग-सहनशीलता के लिए जरूरी है।"
+        )
+    if has_kvk:
+        lines.append(
+            "KVK का मतलब कृषि विज्ञान केंद्र है। यह किसानों को स्थानीय फसल सलाह, प्रशिक्षण, मिट्टी/कीट प्रबंधन मार्गदर्शन और नई तकनीक का प्रदर्शन देता है।"
+        )
+
+    lines.append("अगर चाहें तो मैं आपकी फसल और जमीन के अनुसार NPK की व्यावहारिक मात्रा भी बता सकता हूँ।")
+    return " ".join(lines), ["agri_glossary"]
+
+
+def _estimate_irrigation_mm_range(temperature_c: float, precipitation_mm: float) -> tuple[float, float, str]:
+    if precipitation_mm >= 2.0:
+        return 0.0, 0.0, "आज बारिश/नमी पर्याप्त है, इसलिए सिंचाई रोकें।"
+    if precipitation_mm >= 0.5:
+        return 1.0, 2.0, "हल्की वर्षा दर्ज हुई है, इसलिए सिर्फ हल्की टॉप-अप सिंचाई रखें।"
+    if temperature_c >= 38:
+        return 8.0, 10.0, "गर्मी बहुत अधिक है, फसल का पानी नुकसान तेजी से होगा।"
+    if temperature_c >= 34:
+        return 6.0, 8.0, "तापमान अधिक है, इसलिए सामान्य से थोड़ी ज्यादा सिंचाई रखें।"
+    if temperature_c <= 10:
+        return 1.0, 2.0, "ठंड में वाष्पीकरण कम रहता है, इसलिए हल्की सिंचाई पर्याप्त रहती है।"
+    return 3.0, 5.0, "मौसम मध्यम है, इसलिए सामान्य सिंचाई मात्रा रखें।"
+
+
+def _round_liters(value: float) -> int:
+    # Round to nearest 100 liters for field-friendly guidance.
+    return max(0, int(round(value / 100.0) * 100))
+
+
+def _build_irrigation_quantity_answer(
+    location: str,
+    crop: str,
+    land_size_acre: float,
+    weather: dict,
+) -> str:
+    temperature_c = float(weather.get("temperature_c", 0.0))
+    precipitation_mm = float(weather.get("precipitation_mm", 0.0))
+    source = str(weather.get("source", "weather"))
+
+    mm_min, mm_max, reason_line = _estimate_irrigation_mm_range(
+        temperature_c=temperature_c,
+        precipitation_mm=precipitation_mm,
+    )
+
+    effective_land_acre = land_size_acre if land_size_acre > 0 else 1.0
+    liters_per_mm_per_acre = 4046.86
+    per_acre_min_l = _round_liters(mm_min * liters_per_mm_per_acre)
+    per_acre_max_l = _round_liters(mm_max * liters_per_mm_per_acre)
+    total_min_l = _round_liters(mm_min * liters_per_mm_per_acre * effective_land_acre)
+    total_max_l = _round_liters(mm_max * liters_per_mm_per_acre * effective_land_acre)
+
+    source_label = "लाइव Open-Meteo" if source == "live_open_meteo" else "कैश्ड/ऑफलाइन मौसम"
+
+    if mm_max == 0.0:
+        quantity_line = "आज अनुशंसित सिंचाई: 0 mm (0 लीटर/एकड़)।"
+        total_line = f"कुल खेत ({effective_land_acre:.2f} एकड़) के लिए: 0 लीटर।"
+    else:
+        quantity_line = (
+            f"आज अनुशंसित सिंचाई: {mm_min:.1f}-{mm_max:.1f} mm "
+            f"(लगभग {per_acre_min_l}-{per_acre_max_l} लीटर/एकड़)।"
+        )
+        total_line = (
+            f"आपकी {effective_land_acre:.2f} एकड़ जमीन के लिए कुल मात्रा: "
+            f"{total_min_l}-{total_max_l} लीटर।"
+        )
+
+    return (
+        f"आज का मौसम ({location}): तापमान {temperature_c:.1f}°C, वर्षा {precipitation_mm:.1f} mm ({source_label})। "
+        f"फसल: {crop}।\n"
+        f"{reason_line}\n"
+        f"{quantity_line}\n"
+        f"{total_line}\n"
+        "समय सुझाव: सिंचाई सुबह 6-9 बजे या शाम 5-7 बजे करें, दोपहर में न करें।"
+    )
+
+
+def _build_current_weather_answer(location: str, weather: dict) -> str:
+    temperature_c = float(weather.get("temperature_c", 0.0))
+    precipitation_mm = float(weather.get("precipitation_mm", 0.0))
+    source = str(weather.get("source", "weather"))
+    source_label = "लाइव Open-Meteo" if source == "live_open_meteo" else "कैश्ड/ऑफलाइन मौसम"
+
+    if source == "offline_default":
+        reliability_line = "लाइव मौसम अभी उपलब्ध नहीं था, इसलिए डिफॉल्ट/ऑफलाइन डेटा इस्तेमाल हुआ।"
+    elif source == "cached_weather":
+        reliability_line = "लाइव मौसम उपलब्ध न होने पर हाल का कैश्ड मौसम इस्तेमाल हुआ।"
+    else:
+        reliability_line = "यह जानकारी आपके प्रोफाइल स्थान के लाइव मौसम से ली गई है।"
+
+    if precipitation_mm >= 1.0:
+        action_line = "आज बारिश/नमी है, इसलिए सिंचाई रोकें और जल निकास जांचें।"
+    elif temperature_c >= 34:
+        action_line = "तापमान अधिक है, सिंचाई सुबह/शाम करें और दोपहर में पानी न दें।"
+    elif temperature_c <= 8:
+        action_line = "ठंड अधिक है, हल्की सिंचाई रखें और कोमल पौधों की सुरक्षा करें।"
+    else:
+        action_line = "मौसम सामान्य है, मिट्टी की नमी देखकर सिंचाई करें।"
+
+    return (
+        f"आज का मौसम ({location}): तापमान {temperature_c:.1f}°C, वर्षा {precipitation_mm:.1f} mm ({source_label})।\n"
+        f"{reliability_line}\n"
+        f"तुरंत सलाह: {action_line}"
+    )
 
 
 def _simple_rule_reply(query_text: str, location: str, crop: str, role: str) -> tuple[str, list[str]]:
     text = query_text.strip().lower()
     normalized_role = _normalize_role(role)
+    agri_context = _contains_any_token(
+        text,
+        [
+            "फसल",
+            "crop",
+            "खेत",
+            "soil",
+            "मिट्टी",
+            "fertilizer",
+            "fertiliser",
+            "khad",
+            "khaad",
+            "npk",
+            "potassium",
+            "phosphorus",
+            "nitrogen",
+            "urea",
+            "dap",
+            "potash",
+            "irrigation",
+            "sinchai",
+            "पानी",
+            "water",
+            "yield",
+            "पैदावार",
+        ],
+    )
 
-    if _contains_any_token(text, ["स्वास्थ्य", "health", "बुखार", "दवाई", "डॉक्टर", "swasthya", "bukhar", "doctor", "medicine"]):
+    if not agri_context and _contains_any_token(text, ["स्वास्थ्य", "health", "बुखार", "दवाई", "डॉक्टर", "swasthya", "bukhar", "doctor", "medicine", "fever", "headache"]):
         return (
             "अगर तेज बुखार, सांस में दिक्कत, छाती दर्द, या लगातार कमजोरी हो तो तुरंत नजदीकी स्वास्थ्य केंद्र जाएं। हल्की समस्या में साफ पानी, संतुलित भोजन, और आराम रखें।",
             ["health_general"],
         )
 
-    if _contains_any_token(text, ["योजना", "scheme", "सरकारी", "सब्सिडी", "लाभ", "yojana", "sarkari", "subsidy", "labh"]):
+    if _contains_any_token(text, ["योजना", "scheme", "सरकारी", "सब्सिडी", "लाभ", "yojana", "sarkari", "subsidy", "labh", "pm-kisan", "pension"]):
         return (
             "सरकारी योजना के लिए अपना आधार, बैंक खाता, और मोबाइल नंबर तैयार रखें। नजदीकी CSC/जन सेवा केंद्र या संबंधित विभाग में आवेदन स्थिति जांचें और रसीद सुरक्षित रखें।",
             ["gov_scheme_general"],
@@ -100,22 +387,28 @@ def _simple_rule_reply(query_text: str, location: str, crop: str, role: str) -> 
             ["assistant_greeting"],
         )
 
+    if _is_crop_growth_issue_query(text):
+        return (
+            "अगर आपकी फसल/पौधा ठीक से नहीं बढ़ रहा है, तो पहले 4 चीजें चेक करें: (1) मिट्टी में नमी और जल-निकास, (2) बीज/पौधे की गुणवत्ता, (3) संतुलित NPK और सूक्ष्म पोषक तत्व, (4) कीट/रोग लक्षण। अभी हल्की सिंचाई रखें, खेत में पानी भराव न होने दें, और 5-7 दिन में फर्क देखें। फसल का नाम और उम्र बताएं तो मैं सटीक मात्रा/शेड्यूल दूँगा।",
+            ["crop_growth_troubleshooting"],
+        )
+
     if _contains_any_token(text, ["बुवाई", "sowing", "buwai", "bowai"]):
         return (
             f"{location} में {crop} की बुवाई आमतौर पर अक्टूबर से नवंबर के बीच करें। मिट्टी में नमी हो तो अंकुरण अच्छा होगा।",
             ["crop_calendar_uttarakhand.json"],
         )
-    if _contains_any_token(text, ["खाद", "fertilizer", "fertiliser", "khad", "khaad"]):
+    if _contains_any_token(text, ["खाद", "fertilizer", "fertiliser", "khad", "khaad", "npk", "urea", "dap", "potash", "nitrogen", "phosphorus", "potassium", "nutrient", "dose", "dosage"]):
         return (
             f"{crop} के लिए नाइट्रोजन, फॉस्फोरस और पोटाश संतुलित मात्रा में दें। अपनी ज़मीन की जांच रिपोर्ट हो तो उसी के अनुसार मात्रा तय करें।",
             ["fertilizer_basics_north_india.json"],
         )
-    if _contains_any_token(text, ["मौसम", "weather", "mausam", "barish", "rain"]):
+    if _contains_any_token(text, ["मौसम", "weather", "mausam", "barish", "rain", "temperature", "temp", "humidity", "rainfall"]):
         return (
             f"अगर अगले 24 घंटों में बारिश की संभावना हो तो सिंचाई टालें। {location} के लिए खेत में नमी देखकर ही पानी दें।",
             ["weather_rules_general.json"],
         )
-    if _contains_any_token(text, ["सिंचाई", "irrigation", "पानी", "water", "sinchai", "pani", "paani"]):
+    if _contains_any_token(text, ["सिंचाई", "irrigation", "irrigigation", "पानी", "water", "watering", "sinchai", "pani", "paani"]):
         return (
             f"{crop} में सिंचाई मिट्टी की नमी और मौसम देखकर करें। पहली सिंचाई क्रिटिकल स्टेज पर करें और पानी भराव से बचें।",
             ["weather_rules_general.json"],
@@ -132,7 +425,7 @@ def _simple_rule_reply(query_text: str, location: str, crop: str, role: str) -> 
         )
 
     return (
-        "कृपया खेती, स्वास्थ्य, शिक्षा/कौशल, या सरकारी योजना से जुड़ा सवाल पूछें। मैं सरल और काम की सलाह दूंगा।",
+        "कृपया खेती, स्वास्थ्य, शिक्षा/कौशल, या सरकारी योजना से जुड़ा सवाल पूछें। आप हिंदी, English या mixed भाषा में पूछ सकते हैं।",
         ["domain_guardrail"],
     )
 
@@ -272,8 +565,6 @@ def _build_detailed_fallback_answer(
     kb_line = retrieval_summary if retrieval_summary else "मिट्टी परीक्षण और स्थानीय कृषि विभाग की सलाह के आधार पर मात्रा समायोजित करें।"
 
     return (
-        f"आपका सवाल: {query_text}\n"
-        f"प्रोफाइल: स्थान {location}, जमीन {land_size_acre} एकड़, फसल {crop}\n\n"
         "1) अभी क्या करें:\n"
         f"- {base_answer}\n"
         "- खेत की नमी और जल निकास तुरंत जांचें।\n\n"
@@ -310,7 +601,80 @@ def generate_advisory(db: Session, query_text: str) -> dict:
     advisory_crop = (profile.crop_preference or "").strip() or "सामान्य"
     if advisory_crop in {"शिक्षा", "कौशल"}:
         advisory_crop = "सामान्य"
-    agri_query = _is_agri_query(query_text.strip().lower())
+    normalized_query = query_text.strip().lower()
+    agri_query = _is_agri_query(normalized_query)
+    weather_query = _is_current_weather_query(normalized_query)
+
+    if _is_irrigation_quantity_query(normalized_query):
+        answer = _build_irrigation_quantity_answer(
+            location=profile.location,
+            crop=advisory_crop,
+            land_size_acre=profile.land_size_acre,
+            weather=weather,
+        )
+        mode = "weather_irrigation_quantified"
+        sources = sorted(set([str(weather.get("source", "weather")), "irrigation_estimator"]))
+
+        log = ConversationLog(
+            user_query=query_text,
+            assistant_response=answer,
+            mode=mode,
+        )
+        db.add(log)
+        db.commit()
+
+        return {
+            "answer": answer,
+            "mode": mode,
+            "language": "hi",
+            "generated_at": datetime.now(timezone.utc),
+            "sources": sources,
+        }
+
+    if weather_query:
+        answer = _build_current_weather_answer(
+            location=profile.location,
+            weather=weather,
+        )
+        mode = "weather_current_observation"
+        sources = sorted(set([str(weather.get("source", "weather")), "weather_current_observation"]))
+
+        log = ConversationLog(
+            user_query=query_text,
+            assistant_response=answer,
+            mode=mode,
+        )
+        db.add(log)
+        db.commit()
+
+        return {
+            "answer": answer,
+            "mode": mode,
+            "language": "hi",
+            "generated_at": datetime.now(timezone.utc),
+            "sources": sources,
+        }
+
+    term_explanation = _build_term_explanation_answer(normalized_query)
+    if term_explanation is not None:
+        answer, sources = term_explanation
+        mode = "agri_term_explanation"
+
+        log = ConversationLog(
+            user_query=query_text,
+            assistant_response=answer,
+            mode=mode,
+        )
+        db.add(log)
+        db.commit()
+
+        return {
+            "answer": answer,
+            "mode": mode,
+            "language": "hi",
+            "generated_at": datetime.now(timezone.utc),
+            "sources": sources,
+        }
 
     base_answer, sources = _simple_rule_reply(
         query_text=query_text,
@@ -330,24 +694,18 @@ def generate_advisory(db: Session, query_text: str) -> dict:
         )
 
     weather_line = _build_weather_advice(weather)
-    profile_context = f"आपका स्थान: {profile.location}"
-    if profile_role == "किसान":
-        profile_context += f", जमीन: {profile.land_size_acre} एकड़, पसंदीदा फसल: {advisory_crop}"
-    else:
-        profile_context += f", भूमिका: {profile_role}"
-
+    answer_parts = [base_answer]
     if retrieval_summary:
-        fallback_answer = (
-            f"{profile_context}। "
-            f"{base_answer} {retrieval_summary} मौसम स्थिति: {weather_line}"
-        )
-        sources = sorted(set(sources + retrieval_sources + [str(weather.get("source", "weather"))]))
-    else:
-        fallback_answer = (
-            f"{profile_context}। "
-            f"{base_answer} मौसम स्थिति: {weather_line}"
-        )
-        sources = sorted(set(sources + [str(weather.get("source", "weather"))]))
+        answer_parts.append(retrieval_summary)
+    if agri_query:
+        answer_parts.append(f"मौसम स्थिति: {weather_line}")
+    fallback_answer = " ".join(part.strip() for part in answer_parts if part and part.strip())
+
+    source_set = set(sources)
+    source_set.update(retrieval_sources)
+    if agri_query:
+        source_set.add(str(weather.get("source", "weather")))
+    sources = sorted(source_set)
 
     answer = fallback_answer
     mode = "hybrid_rule_retrieval"
