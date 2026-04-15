@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Card from "@/components/Card";
@@ -13,7 +13,7 @@ import { queueEvent } from "@/lib/offline-queue";
 
 export default function OnboardingDetailsPage() {
   const router = useRouter();
-  const { userRole, language, setProfileData, setHasCompletedOnboarding } = useAppContext();
+  const { userRole, language, currentUserPhone, setProfileData, setHasCompletedOnboarding } = useAppContext();
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +32,16 @@ export default function OnboardingDetailsPage() {
     // Worker fields
     skill: "",
   });
+
+  // Guard: redirect to login if not logged in
+  useEffect(() => {
+    if (!currentUserPhone) {
+      router.push("/login");
+    } else {
+      // Pre-fill phone number
+      setFormData(prev => ({ ...prev, phone_number: currentUserPhone }));
+    }
+  }, [currentUserPhone, router]);
 
   // Redirect if no role selected
   if (!userRole) {
@@ -202,7 +212,7 @@ export default function OnboardingDetailsPage() {
             />
           </div>
 
-          {/* Phone number field - Common for all roles */}
+          {/* Phone number field - Common for all roles - READ ONLY */}
           <div>
             <label className="text-xs text-slate-600 font-semibold uppercase tracking-wide mb-2 block">
               {t("onboarding-phone", language)} *
@@ -211,11 +221,11 @@ export default function OnboardingDetailsPage() {
               type="tel"
               name="phone_number"
               value={formData.phone_number}
-              onChange={handleInputChange}
+              readOnly
               placeholder={t("onboarding-phone-ph", language)}
-              disabled={isLoading}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:border-rural-green focus:ring-1 focus:ring-rural-green transition-all disabled:opacity-60"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm bg-slate-100 cursor-not-allowed text-slate-700"
             />
+            <p className="text-xs text-slate-500 mt-1">लॉगिन फोन नंबर से सेट</p>
           </div>
 
           {/* Location field - Common for all roles */}

@@ -177,6 +177,20 @@ export const translations: Record<Language, Record<string, string>> = {
     "browser-unsupported": "ब्राउज़र में आवाज़ पहचान उपलब्ध नहीं है",
     "voice-failed": "आवाज़ पहचान असफल, कृपया फिर से कोशिश करें",
     "no-voice-detected": "आवाज़ पहचान नहीं पाया, कृपया फिर से कोशिश करें",
+
+    // Login
+    "login-title": "अपना फोन नंबर दर्ज करें",
+    "login-subtitle": "नए उपयोगकर्ता या वापसी",
+    "login-phone-label": "फोन नंबर",
+    "login-phone-placeholder": "10 अंकों का नंबर",
+    "login-phone-example": "उदाहरण: 9876543210",
+    "login-button": "आगे बढ़ें",
+    "login-checking": "सत्यापन हो रहा है...",
+    "login-error-invalid": "कृपया 10 अंकों का नंबर दर्ज करें",
+    "login-error-network": "नेटवर्क त्रुटि। कृपया फिर से कोशिश करें",
+    "login-error-server": "सर्वर में समस्या। कृपया बाद में कोशिश करें",
+    "login-info": "आपका डेटा सुरक्षित रहता है। कोई पासवर्ड आवश्यक नहीं है।",
+    "login-explanation": "नए उपयोगकर्ता या वापसी - एक ही नंबर से लॉगिन करें",
   },
   en: {
     // Landing
@@ -354,6 +368,20 @@ export const translations: Record<Language, Record<string, string>> = {
     "browser-unsupported": "Voice recognition not supported in this browser",
     "voice-failed": "Voice recognition failed, please try again",
     "no-voice-detected": "No voice detected, please try again",
+
+    // Login
+    "login-title": "Enter Your Phone Number",
+    "login-subtitle": "New or Returning User",
+    "login-phone-label": "Phone Number",
+    "login-phone-placeholder": "10-digit number",
+    "login-phone-example": "Example: 9876543210",
+    "login-button": "Continue",
+    "login-checking": "Verifying...",
+    "login-error-invalid": "Please enter 10-digit number",
+    "login-error-network": "Network error. Please retry",
+    "login-error-server": "Server error. Please try later",
+    "login-info": "Your data is safe. No password needed.",
+    "login-explanation": "New or returning user - login with one phone number",
   },
 };
 

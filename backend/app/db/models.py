@@ -13,13 +13,16 @@ class UserProfile(Base):
 
     # User identification
     name: Mapped[str] = mapped_column(String(120), nullable=True)
-    phone_number: Mapped[str] = mapped_column(String(20), nullable=True)
+    phone_number: Mapped[str] = mapped_column(String(20), nullable=False, unique=True, index=True)
 
     # User role (किसान, छात्र, मजदूर)
     role: Mapped[str] = mapped_column(String(40), nullable=True)
 
     # Onboarding status
     has_completed_onboarding: Mapped[bool] = mapped_column(default=False, nullable=False)
+
+    # User preference
+    preferred_language: Mapped[str] = mapped_column(String(5), default="hi", nullable=False)
 
     # Base profile fields (farmer, student, worker)
     location: Mapped[str] = mapped_column(String(120), nullable=False)

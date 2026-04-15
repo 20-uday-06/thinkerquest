@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import SelectionCard from "@/components/SelectionCard";
 import Button from "@/components/Button";
@@ -33,8 +33,15 @@ const USER_ROLES = [
 
 export default function UserSelectionPage() {
   const router = useRouter();
-  const { setUserRole, setHasCompletedOnboarding, language } = useAppContext();
+  const { setUserRole, currentUserPhone, language } = useAppContext();
   const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  // Guard: redirect to login if not logged in
+  useEffect(() => {
+    if (!currentUserPhone) {
+      router.push("/login");
+    }
+  }, [currentUserPhone, router]);
 
   const handleSelect = (roleId: string) => {
     setSelectedRole(roleId);
@@ -82,7 +89,7 @@ export default function UserSelectionPage() {
         </Button>
         <button
           type="button"
-          onClick={() => router.push("/landing")}
+          onClick={() => router.push("/login")}
           className="w-full mt-3 text-sm text-slate-600 hover:text-slate-900 font-semibold transition-colors"
         >
           {t("go-back", language)}

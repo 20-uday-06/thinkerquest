@@ -1,7 +1,40 @@
+from typing import Optional, Tuple
+
 from sqlalchemy.orm import Session
 
 from app.db.models import UserProfile
 from app.schemas.profile import UserProfileUpsertRequest, OnboardingDetailsRequest
+
+
+def get_profile_by_phone(db: Session, phone_number: str) -> Optional[UserProfile]:
+    """Get user profile by phone number. Returns None if not found."""
+    return db.query(UserProfile).filter(
+        UserProfile.phone_number == phone_number.strip()
+    ).first()
+
+
+def create_profile_for_new_user(db: Session, phone_number: str) -> UserProfile:
+    """Create a new profile for a new user (incomplete onboarding)."""
+    profile = UserProfile(
+        phone_number=phone_number.strip(),
+        location="",
+        land_size_acre=1.0,
+        crop_preference="",
+        has_completed_onboarding=False,
+        preferred_language="hi",
+    )
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    return profile
+
+
+def get_or_create_profile_by_phone(db: Session, phone_number: str) -> Tuple[UserProfile, bool]:
+    """Get profile by phone or create new one. Returns (profile, is_new_user)."""
+    profile = get_profile_by_phone(db, phone_number)
+    if profile:
+        return profile, False
+    return create_profile_for_new_user(db, phone_number), True
 
 
 def get_or_create_profile(db: Session) -> UserProfile:
@@ -21,24 +54,24 @@ def get_or_create_profile(db: Session) -> UserProfile:
     return profile
 
 
-def upsert_profile(db: Session, payload: UserProfileUpsertRequest) -> UserProfile:
-    profile = db.query(UserProfile).order_by(UserProfile.id.asc()).first()
+def upsert_profile(db: Session, payload: UserProfileUpsertRequest, phone_number: str) -> UserProfile:
+    """Update or create profile by phone number."""
+    profile = get_profile_by_phone(db, phone_number)
     if profile is None:
         profile = UserProfile(
             name=payload.name,
-            phone_number=payload.phone_number,
+            phone_number=phone_number.strip(),
             location=payload.location,
             land_size_acre=payload.land_size_acre,
             crop_preference=payload.crop_preference,
             role=payload.role,
             has_completed_onboarding=payload.has_completed_onboarding or False,
+            preferred_language="hi",
         )
         db.add(profile)
     else:
         if payload.name:
             profile.name = payload.name
-        if payload.phone_number:
-            profile.phone_number = payload.phone_number
         profile.location = payload.location
         profile.land_size_acre = payload.land_size_acre
         profile.crop_preference = payload.crop_preference
@@ -52,7 +85,7 @@ def upsert_profile(db: Session, payload: UserProfileUpsertRequest) -> UserProfil
     return profile
 
 
-def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> UserProfile:
+def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest, phone_number: str) -> UserProfile:
     """
     Save user onboarding details based on role.
 
@@ -60,25 +93,26 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
     - Student (छात्र): location, field, interest, name, phone_number
     - Worker (मजदूर): location, skill, name, phone_number
     """
-    profile = db.query(UserProfile).order_by(UserProfile.id.asc()).first()
+    profile = get_profile_by_phone(db, phone_number)
 
     if profile is None:
         # Create new profile with onboarding data
         if payload.role == "किसान":  # Farmer
             profile = UserProfile(
                 name=payload.name,
-                phone_number=payload.phone_number,
+                phone_number=phone_number.strip(),
                 role=payload.role,
                 location=payload.location,
                 crop_preference=payload.crop or "अन्य",
                 land_size_acre=payload.land_size or 1.0,
                 farm_type=payload.crop,
                 has_completed_onboarding=True,
+                preferred_language="hi",
             )
         elif payload.role == "छात्र":  # Student
             profile = UserProfile(
                 name=payload.name,
-                phone_number=payload.phone_number,
+                phone_number=phone_number.strip(),
                 role=payload.role,
                 location=payload.location,
                 field_of_study=payload.field,
@@ -86,11 +120,12 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
                 crop_preference="सामान्य",
                 land_size_acre=1.0,
                 has_completed_onboarding=True,
+                preferred_language="hi",
             )
         elif payload.role == "मजदूर":  # Worker
             profile = UserProfile(
                 name=payload.name,
-                phone_number=payload.phone_number,
+                phone_number=phone_number.strip(),
                 role=payload.role,
                 location=payload.location,
                 skill=payload.skill,
@@ -98,6 +133,7 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
                 crop_preference="सामान्य",
                 land_size_acre=1.0,
                 has_completed_onboarding=True,
+                preferred_language="hi",
             )
         else:
             raise ValueError(f"Invalid role: {payload.role}")
@@ -106,7 +142,6 @@ def save_onboarding_details(db: Session, payload: OnboardingDetailsRequest) -> U
     else:
         # Update existing profile
         profile.name = payload.name
-        profile.phone_number = payload.phone_number
         profile.role = payload.role
         profile.location = payload.location
         profile.has_completed_onboarding = True
