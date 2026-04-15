@@ -6,6 +6,18 @@ import type {
   VoiceTtsResponse,
 } from "@/lib/types";
 
+export interface LoginResponse {
+  user_id: number;
+  profile: UserProfile;
+  is_new_user: boolean;
+}
+
+export interface CheckPhoneResponse {
+  exists: boolean;
+  profile?: UserProfile;
+  is_new_user: boolean;
+}
+
 function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
     const fromWindow = (window as Window & { __API_BASE_URL__?: string }).__API_BASE_URL__;
@@ -35,16 +47,24 @@ async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
-export async function getProfile(): Promise<UserProfile> {
-  return requestJson<UserProfile>("/api/profile", { method: "GET" });
+export async function getProfile(phoneNumber?: string): Promise<UserProfile> {
+  const params = phoneNumber ? `?phone_number=${encodeURIComponent(phoneNumber)}` : "";
+  return requestJson<UserProfile>(`/api/profile${params}`, { method: "GET" });
 }
 
 export async function updateProfile(payload: {
   location: string;
   land_size_acre: number;
   crop_preference: string;
-}): Promise<UserProfile> {
-  return requestJson<UserProfile>("/api/profile", {
+  role?: string;
+  has_completed_onboarding?: boolean;
+  farm_type?: string;
+  field_of_study?: string;
+  interest_area?: string;
+  skill?: string;
+  worker_location?: string;
+}, phoneNumber: string): Promise<UserProfile> {
+  return requestJson<UserProfile>(`/api/profile?phone_number=${encodeURIComponent(phoneNumber)}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
@@ -76,5 +96,44 @@ export async function synthesizeSpeech(text: string): Promise<VoiceTtsResponse> 
   return requestJson<VoiceTtsResponse>("/api/voice/tts", {
     method: "POST",
     body: JSON.stringify({ text, language: "hi" }),
+  });
+}
+
+// INTEGRATION: Onboarding API
+export async function completeOnboarding(payload: {
+  name: string;
+  phone_number: string;
+  role: string;
+  location: string;
+  crop?: string;
+  land_size?: number;
+  field?: string;
+  interest?: string;
+  skill?: string;
+}): Promise<UserProfile> {
+  return requestJson<UserProfile>("/api/onboarding/complete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+// AUTH APIs
+export async function loginWithPhone(phoneNumber: string): Promise<LoginResponse> {
+  return requestJson<LoginResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ phone_number: phoneNumber }),
+  });
+}
+
+export async function checkPhoneExists(phoneNumber: string): Promise<CheckPhoneResponse> {
+  return requestJson<CheckPhoneResponse>(
+    `/api/auth/check-phone/${encodeURIComponent(phoneNumber)}`,
+    { method: "GET" }
+  );
+}
+
+export async function logoutUser(): Promise<{ success: boolean }> {
+  return requestJson<{ success: boolean }>("/api/auth/logout", {
+    method: "POST",
   });
 }

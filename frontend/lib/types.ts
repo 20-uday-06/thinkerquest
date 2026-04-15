@@ -1,8 +1,17 @@
 export type UserProfile = {
   id: number;
+  name?: string;
+  phone_number?: string;
+  role?: string;
+  has_completed_onboarding?: boolean;
   location: string;
   land_size_acre: number;
   crop_preference: string;
+  farm_type?: string;
+  field_of_study?: string;
+  interest_area?: string;
+  skill?: string;
+  worker_location?: string;
   updated_at: string;
 };
 

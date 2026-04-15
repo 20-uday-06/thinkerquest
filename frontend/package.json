@@ -11,7 +11,8 @@
   "dependencies": {
     "next": "15.4.6",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "lucide-react": "^0.403.0"
   },
   "devDependencies": {
     "@types/node": "22.17.1",
@@ -23,3 +24,4 @@
     "typescript": "5.8.3"
   }
 }
+

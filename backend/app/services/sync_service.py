@@ -37,8 +37,13 @@ def apply_sync_events(db: Session, payload: SyncRequest) -> dict:
     ignored = 0
 
     candidate_events = _collapse_latest_profile_updates(payload.events)
+    seen_event_ids: set[str] = set()
 
     for event in candidate_events:
+        if event.client_event_id in seen_event_ids:
+            ignored += 1
+            continue
+
         exists = (
             db.query(SyncEvent)
             .filter(SyncEvent.client_event_id == event.client_event_id)
@@ -46,7 +51,18 @@ def apply_sync_events(db: Session, payload: SyncRequest) -> dict:
         )
         if exists:
             ignored += 1
+            seen_event_ids.add(event.client_event_id)
             continue
+
+        if event.event_type == "profile_update":
+            try:
+                profile_payload = UserProfileUpsertRequest(**event.payload)
+            except Exception:
+                ignored += 1
+                seen_event_ids.add(event.client_event_id)
+                continue
+
+            upsert_profile(db, profile_payload)
 
         new_event = SyncEvent(
             client_event_id=event.client_event_id,
@@ -55,14 +71,7 @@ def apply_sync_events(db: Session, payload: SyncRequest) -> dict:
         )
         db.add(new_event)
 
-        if event.event_type == "profile_update":
-            try:
-                profile_payload = UserProfileUpsertRequest(**event.payload)
-                upsert_profile(db, profile_payload)
-            except Exception:
-                ignored += 1
-                continue
-
+        seen_event_ids.add(event.client_event_id)
         accepted += 1
 
     db.commit()
