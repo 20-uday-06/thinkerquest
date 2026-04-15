@@ -86,9 +86,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4" >
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-lg p-8 space-y-6">
+        <div className="bg-white shadow-lg p-8 space-y-6" style={{borderRadius: "25px"}}>
           {/* Header */}
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-bold text-green-700">

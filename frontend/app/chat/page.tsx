@@ -110,8 +110,8 @@ function ChatContent() {
   useEffect(() => {
     // Add initial AI message
     const initialGreeting = language === "hi"
-      ? `नमस्ते! मैं आपकी "${topic}" के बारे में मदद कर सकता हूँ। कृपया अपना सवाल पूछें।`
-      : `Hello! I can help you with "${topic}". Please ask your question.`;
+      ? `नमस्ते, मैं आपकी क्या मदद कर सकता हूँ?`
+      : `Hello, how can I help you?`;
 
     const initialMessage: Message = {
       id: "1",
@@ -456,7 +456,12 @@ function ChatContent() {
   };
 
   return (
-    <main className="min-h-screen w-full flex flex-col app-shell">
+    <main className="min-h-screen w-full flex flex-col app-shell relative overflow-hidden bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-50">
+      {/* Animated background elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl" />
+        <div className="absolute bottom-40 left-0 w-80 h-80 bg-green-200/20 rounded-full blur-3xl" />
+      </div>
       {/* Header */}
       <header className="sticky top-0 z-50 px-4 md:px-6 pt-4">
         <div className="mx-auto max-w-5xl glass-panel rounded-2xl px-4 py-3 border border-rural-green/18 shadow-soft">

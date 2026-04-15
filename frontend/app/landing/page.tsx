@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
+import LanguageToggle from "@/components/LanguageToggle";
 import { useAppContext } from "@/lib/AppContext";
 import { t } from "@/lib/translations";
 
@@ -26,52 +27,149 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen w-full px-5 py-8 app-shell flex items-center justify-center">
-      <section className="w-full max-w-4xl rounded-[2rem] overflow-hidden border border-rural-green/20 shadow-lux-lg bg-white/90">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="hero-gradient p-8 md:p-10 relative overflow-hidden">
-            <div className="absolute -top-10 -right-8 h-36 w-36 rounded-full bg-white/10 blur-2xl" aria-hidden />
-            <div className="absolute -bottom-12 left-0 h-36 w-36 rounded-full bg-amber-200/20 blur-2xl" aria-hidden />
+    <main className="min-h-screen w-full flex flex-col items-center justify-center p-4 md:p-6 relative overflow-hidden">
+      {/* Animated background gradients */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-0 -left-96 w-96 h-96 bg-gradient-to-br from-emerald-200 to-transparent rounded-full blur-3xl opacity-30 animate-pulse" />
+        <div className="absolute bottom-0 -right-96 w-96 h-96 bg-gradient-to-tl from-yellow-100 via-emerald-50 to-transparent rounded-full blur-3xl opacity-20 animate-pulse" />
+        <div className="absolute top-1/3 left-1/2 w-80 h-80 bg-gradient-to-br from-green-100 to-transparent rounded-full blur-3xl opacity-20" />
+      </div>
 
-            <p className="text-4xl mb-4">{t("greeting", language)}</p>
-            <h1 className="text-4xl md:text-5xl luxury-heading leading-tight mb-3">{t("app-name", language)}</h1>
-            <h2 className="text-lg md:text-xl text-emerald-100/90 font-semibold mb-6">{t("app-subtitle", language)}</h2>
+      {/* Content wrapper */}
+      <div className="relative z-10 w-full max-w-6xl">
+        {/* Language toggle - top right */}
+        <div className="absolute -top-16 right-4 md:right-0">
+          <LanguageToggle />
+        </div>
 
-            <p className="text-sm md:text-base text-emerald-50/90 leading-7 max-w-md">
-              {t("landing-subtitle", language)}
-            </p>
-          </div>
+        {/* Main content card */}
+        <div className="bg-white/85 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/40">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-0">
+            {/* LEFT SECTION - Hero content */}
+            <div className="bg-gradient-to-br from-emerald-100 via-emerald-200/60 to-emerald-100 p-8 md:p-12 lg:p-16 relative overflow-hidden flex flex-col justify-center">
+              {/* Decorative elements */}
+              <div className="absolute -top-24 -right-24 w-48 h-48 bg-white/30 rounded-full blur-3xl" />
+              <div className="absolute -bottom-32 left-0 w-64 h-64 bg-emerald-200/20 rounded-full blur-3xl" />
 
-          <div className="p-8 md:p-10 bg-gradient-to-b from-white/95 to-rural-greenLight/40">
-            <div className="text-6xl mb-5 animate-float-slow">🌾</div>
-            <p className="text-sm text-slate-700 leading-7 font-medium mb-8">{t("landing-description", language)}</p>
+              <div className="relative z-10">
+                {/* Greeting emoji */}
+                <div className="inline-block mb-6">
+                  <p className="text-6xl animate-bounce-subtle mb-1">{t("greeting", language).split(" ")[0]}</p>
+                </div>
 
-            <Button
-              size="lg"
-              onClick={handleStart}
-              className="w-full mb-7"
-            >
-              <span>{t("start-button", language)}</span>
-              <span>→</span>
-            </Button>
+                {/* Main title */}
+                <h1 className="text-5xl md:text-6xl font-bold text-emerald-900 mb-3 leading-tight luxury-heading">
+                  {t("app-name", language)}
+                </h1>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
-                <div className="text-2xl mb-1">🎤</div>
-                <p className="text-xs font-semibold text-slate-700">{t("voice", language)}</p>
+                {/* Subtitle */}
+                <p className="text-2xl md:text-3xl text-emerald-700/90 font-semibold mb-8">
+                  {t("app-subtitle", language)}
+                </p>
+
+                {/* Description */}
+                <p className="text-lg text-emerald-800/80 leading-relaxed mb-8 max-w-md font-medium">
+                  {t("landing-subtitle", language)}
+                </p>
+
+                {/* Features list */}
+                <div className="space-y-3 mb-8">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">✓</span>
+                    <span className="text-emerald-900 font-semibold">{language === "hi" ? "आपकी भाषा में सलाह" : "Advice in Your Language"}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">✓</span>
+                    <span className="text-emerald-900 font-semibold">{language === "hi" ? "ऑफलाइन भी काम करता है" : "Works Offline Too"}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">✓</span>
+                    <span className="text-emerald-900 font-semibold">{language === "hi" ? "आपका डेटा सुरक्षित" : "Your Data is Safe"}</span>
+                  </div>
+                </div>
               </div>
-              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
-                <div className="text-2xl mb-1">💬</div>
-                <p className="text-xs font-semibold text-slate-700">{t("chat", language)}</p>
+            </div>
+
+            {/* RIGHT SECTION - Features showcase */}
+            <div className="bg-gradient-to-b from-white via-emerald-50/30 to-emerald-100/40 p-8 md:p-12 lg:p-16 flex flex-col justify-between">
+              {/* Large emoji */}
+              <div className="text-8xl mb-6 animate-bounce-subtle text-center">🌾</div>
+
+              {/* Main description */}
+              <div className="mb-10">
+                <p className="text-base md:text-lg text-slate-700 leading-8 font-medium">
+                  {t("landing-description", language)}
+                </p>
               </div>
-              <div className="rounded-xl border border-rural-green/20 bg-white/80 p-3 text-center">
-                <div className="text-2xl mb-1">📵</div>
-                <p className="text-xs font-semibold text-slate-700">{t("offline", language)}</p>
+
+              {/* CTA Button */}
+              <div className="mb-10">
+                <Button
+                  size="lg"
+                  onClick={handleStart}
+                  className="w-full py-4 md:py-5 text-lg font-bold bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  <span>{t("start-button", language)}</span>
+                  <span className="ml-2 text-xl">→</span>
+                </Button>
+              </div>
+
+              {/* Feature cards */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+                  {language === "hi" ? "मुख्य विशेषताएं" : "Key Features"}
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Voice feature */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-emerald-400 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+                    <div className="relative rounded-2xl border-2 border-emerald-200 bg-white/90 p-4 text-center hover:bg-white transition-all duration-300 hover:shadow-lg">
+                      <div className="text-4xl mb-2">🎤</div>
+                      <p className="text-xs font-bold text-emerald-900">{t("voice", language)}</p>
+                    </div>
+                  </div>
+
+                  {/* Chat feature */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-400 to-emerald-400 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+                    <div className="relative rounded-2xl border-2 border-emerald-200 bg-white/90 p-4 text-center hover:bg-white transition-all duration-300 hover:shadow-lg">
+                      <div className="text-4xl mb-2">💬</div>
+                      <p className="text-xs font-bold text-emerald-900">{t("chat", language)}</p>
+                    </div>
+                  </div>
+
+                  {/* Offline feature */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-br from-orange-400 to-emerald-400 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
+                    <div className="relative rounded-2xl border-2 border-emerald-200 bg-white/90 p-4 text-center hover:bg-white transition-all duration-300 hover:shadow-lg">
+                      <div className="text-4xl mb-2">📵</div>
+                      <p className="text-xs font-bold text-emerald-900">{t("offline", language)}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </section>
+
+        {/* Footer trust text */}
+        <div className="text-center mt-10">
+          <p className="text-sm text-slate-700/80 font-medium">
+            {language === "hi" ? "🔒 आपका निजी डेटा पूरी तरह सुरक्षित है" : "🔒 Your privacy is completely protected"}
+          </p>
+        </div>
+      </div>
+
+      {/* Add custom animation */}
+      <style>{`
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
+        }
+        .animate-bounce-subtle {
+          animation: bounce-subtle 2s ease-in-out infinite;
+        }
+      `}</style>
     </main>
   );
 }
