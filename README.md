@@ -2,6 +2,17 @@
 
 Voice-first, Hindi-first agriculture advisory prototype for low-literacy rural users.
 
+Rural communities in India continue to face systemic challenges in accessing essential services such as healthcare, education, agricultural support, and government welfare schemes. These challenges arise due to limited infrastructure, low digital literacy, fragmented information channels, and language barriers. Existing digital solutions often fail to address the usability and accessibility constraints of rural populations. There is a need for intelligent, adaptive systems that bridge this gap by providing localized, context-aware assistance in a simple and accessible manner.
+
+## This problem requires the development of an AI-powered platform that models rural service accessibility as an interactive and assistive system, where: 
+
+### ->Users interact through low-barrier interfaces such as voice, regional languages, or minimal-text UI. 
+### ->AI agents provide contextual recommendations for agriculture, healthcare, education, or government schemes. 
+### ->The system adapts to user behavior, literacy level, and regional constraints. 
+### ->Information is aggregated from multiple sources and delivered in a simplified, actionable format. 
+### ->Offline or low-connectivity scenarios are handled efficiently.
+
+The objective is to design an intelligent system that improves awareness, accessibility, and decision-making for rural users while remaining affordable and easy to use.
 ## Milestone 8 Status
 
 This repository currently includes:
